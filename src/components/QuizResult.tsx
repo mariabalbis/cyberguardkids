@@ -1,0 +1,106 @@
+import { achievements, Achievement } from "@/data/questions";
+import { RotateCcw, Trophy, Shield, Star } from "lucide-react";
+
+interface QuizResultProps {
+  score: number;
+  total: number;
+  onRestart: () => void;
+}
+
+const getLevel = (percentage: number) => {
+  if (percentage >= 80) return { label: "Avançado", icon: Trophy, color: "text-accent" };
+  if (percentage >= 50) return { label: "Intermediário", icon: Shield, color: "text-warning" };
+  return { label: "Iniciante", icon: Star, color: "text-destructive" };
+};
+
+const getMessage = (percentage: number) => {
+  if (percentage === 100) return "Incrível! Você é um verdadeiro especialista em segurança digital! 🏆";
+  if (percentage >= 80) return "Excelente! Você está muito bem protegido na internet! 🛡️";
+  if (percentage >= 60) return "Bom trabalho! Você sabe bastante, mas ainda pode melhorar. 💪";
+  if (percentage >= 40) return "Você tem noções básicas, mas precisa se informar mais. 📚";
+  return "Cuidado! Você precisa aprender mais sobre segurança digital. ⚠️";
+};
+
+const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
+  const percentage = Math.round((score / total) * 100);
+  const level = getLevel(percentage);
+  const LevelIcon = level.icon;
+  const earnedAchievements = achievements.filter((a) => a.condition(score / 10, total / 10));
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12 bg-grid">
+      <div className="absolute top-20 right-20 w-48 h-48 rounded-full bg-primary/5 blur-3xl" />
+      <div className="absolute bottom-20 left-10 w-36 h-36 rounded-full bg-secondary/5 blur-3xl" />
+
+      <div className="relative z-10 max-w-lg w-full space-y-8 text-center">
+        {/* Score circle */}
+        <div className="animate-scale-pop">
+          <div className="mx-auto w-28 h-28 rounded-full bg-card neon-border flex flex-col items-center justify-center card-glow">
+            <span className="text-3xl font-bold font-mono text-foreground">{score}</span>
+            <span className="text-xs text-muted-foreground">de {total} pts</span>
+          </div>
+        </div>
+
+        {/* Level */}
+        <div className="space-y-2 opacity-0 animate-fade-up" style={{ animationDelay: "200ms" }}>
+          <div className="flex items-center justify-center gap-2">
+            <LevelIcon className={`w-5 h-5 ${level.color}`} />
+            <span className={`text-sm font-semibold ${level.color}`}>
+              Nível {level.label}
+            </span>
+          </div>
+          <p className="text-lg font-semibold text-foreground">{getMessage(percentage)}</p>
+          <p className="text-sm text-muted-foreground">
+            Você acertou {percentage}% das perguntas
+          </p>
+        </div>
+
+        {/* Percentage bar */}
+        <div className="w-full max-w-xs mx-auto opacity-0 animate-fade-up" style={{ animationDelay: "300ms" }}>
+          <div className="w-full h-3 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-1000 ease-out"
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Achievements */}
+        {earnedAchievements.length > 0 && (
+          <div className="space-y-3 opacity-0 animate-fade-up" style={{ animationDelay: "400ms" }}>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Conquistas Desbloqueadas
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {earnedAchievements.map((achievement: Achievement, i: number) => (
+                <div
+                  key={achievement.id}
+                  className="rounded-xl bg-card neon-border p-3 space-y-1 opacity-0 animate-scale-pop"
+                  style={{ animationDelay: `${500 + i * 100}ms` }}
+                >
+                  <span className="text-2xl">{achievement.icon}</span>
+                  <p className="text-xs font-semibold text-foreground">{achievement.title}</p>
+                  <p className="text-[10px] text-muted-foreground">{achievement.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Restart */}
+        <button
+          onClick={onRestart}
+          className="mt-4 px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold
+            transition-all duration-200 hover:brightness-110 active:scale-[0.97] card-glow
+            inline-flex items-center gap-2 opacity-0 animate-fade-up"
+          style={{ animationDelay: "700ms" }}
+        >
+          <RotateCcw className="w-4 h-4" />
+          Jogar Novamente
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default QuizResult;
