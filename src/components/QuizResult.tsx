@@ -29,6 +29,14 @@ const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
   const level = getLevel(percentage);
   const LevelIcon = level.icon;
   const earnedAchievements = achievements.filter((a) => a.condition(score / 10, total / 10));
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!saved) {
+      addToRanking(score, total);
+      setSaved(true);
+    }
+  }, [score, total, saved]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12 bg-grid">
