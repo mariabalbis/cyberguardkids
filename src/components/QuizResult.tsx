@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
 import { achievements, Achievement } from "@/data/questions";
+import { addToRanking, RankingEntry } from "@/lib/ranking";
+import Ranking from "@/components/Ranking";
 import { RotateCcw, Trophy, Shield, Star } from "lucide-react";
 
 interface QuizResultProps {
@@ -26,6 +29,14 @@ const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
   const level = getLevel(percentage);
   const LevelIcon = level.icon;
   const earnedAchievements = achievements.filter((a) => a.condition(score / 10, total / 10));
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!saved) {
+      addToRanking(score, total);
+      setSaved(true);
+    }
+  }, [score, total, saved]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12 bg-grid">
@@ -87,13 +98,18 @@ const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
           </div>
         )}
 
+        {/* Ranking */}
+        <div className="opacity-0 animate-fade-up" style={{ animationDelay: "600ms" }}>
+          <Ranking />
+        </div>
+
         {/* Restart */}
         <button
           onClick={onRestart}
           className="mt-4 px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold
             transition-all duration-200 hover:brightness-110 active:scale-[0.97] card-glow
             inline-flex items-center gap-2 opacity-0 animate-fade-up"
-          style={{ animationDelay: "700ms" }}
+          style={{ animationDelay: "800ms" }}
         >
           <RotateCcw className="w-4 h-4" />
           Jogar Novamente
