@@ -78,7 +78,7 @@ const Index = () => {
   if (phase === "welcome") return <WelcomeScreen onStart={handleStart} />;
 
   if (phase === "category")
-    return <CategorySelect onSelect={handleSelectCategory} onBack={handleRestart} />;
+    return <CategorySelect onSelect={handleSelectCategory} onBack={handleRestart} selected={selectedCategory} />;
 
   if (phase === "result") {
     return <QuizResult score={score} total={questions.length * 10} onRestart={handleRestart} />;
