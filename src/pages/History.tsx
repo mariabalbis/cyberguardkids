@@ -245,4 +245,89 @@ const EvolutionChart = ({ entries }: { entries: RankingEntry[] }) => {
   );
 };
 
+const WeeklyGoalCard = ({
+  count,
+  goal,
+  onEdit,
+}: {
+  count: number;
+  goal: number;
+  onEdit: () => void;
+}) => {
+  const pct = Math.min(100, Math.round((count / goal) * 100));
+  const reached = count >= goal;
+  const remaining = Math.max(0, goal - count);
+  return (
+    <div className="rounded-xl bg-card neon-border p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Target className="w-4 h-4 text-primary" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Meta semanal
+          </span>
+        </div>
+        <button
+          onClick={onEdit}
+          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Editar meta semanal"
+        >
+          <Pencil className="w-3 h-3" /> editar
+        </button>
+      </div>
+      <div className="flex items-baseline justify-between">
+        <p className="text-2xl font-bold font-mono text-foreground">
+          {count}
+          <span className="text-sm text-muted-foreground font-normal"> / {goal}</span>
+        </p>
+        <span className={`text-xs font-semibold ${reached ? "text-accent" : "text-primary"}`}>
+          {pct}%
+        </span>
+      </div>
+      <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ease-out ${
+            reached ? "bg-gradient-to-r from-accent to-primary" : "bg-gradient-to-r from-primary to-accent"
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        {reached
+          ? "🎉 Meta da semana concluída! Continue treinando."
+          : `Faltam ${remaining} quiz${remaining === 1 ? "" : "zes"} para bater sua meta.`}
+      </p>
+    </div>
+  );
+};
+
+const StreakCard = ({ current, longest }: { current: number; longest: number }) => {
+  const active = current > 0;
+  return (
+    <div className="rounded-xl bg-card neon-border p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Flame className={`w-4 h-4 ${active ? "text-warning" : "text-muted-foreground"}`} />
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Sequência
+          </span>
+        </div>
+        <span className="text-[11px] text-muted-foreground">recorde {longest}d</span>
+      </div>
+      <div className="flex items-baseline gap-2">
+        <p className={`text-2xl font-bold font-mono ${active ? "text-warning" : "text-foreground"}`}>
+          {current}
+        </p>
+        <span className="text-sm text-muted-foreground">
+          {current === 1 ? "dia seguido" : "dias seguidos"}
+        </span>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        {active
+          ? "🔥 Você está numa boa! Faça um quiz hoje para manter."
+          : "Comece uma nova sequência fazendo um quiz hoje."}
+      </p>
+    </div>
+  );
+};
+
 export default HistoryPage;
