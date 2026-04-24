@@ -1,7 +1,15 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2 } from "lucide-react";
-import { getHistory, clearHistory, RankingEntry } from "@/lib/ranking";
+import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2, Flame, Target, Pencil } from "lucide-react";
+import {
+  getHistory,
+  clearHistory,
+  RankingEntry,
+  getWeeklyProgress,
+  getStreak,
+  getWeeklyGoal,
+  setWeeklyGoal,
+} from "@/lib/ranking";
 import { useState } from "react";
 
 const levelStyles: Record<RankingEntry["level"], { color: string; icon: typeof Trophy }> = {
