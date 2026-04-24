@@ -130,8 +130,26 @@ const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
           </div>
         )}
 
+        {/* Recommendations */}
+        <div
+          className="text-left rounded-xl bg-card neon-border p-5 space-y-3 opacity-0 animate-fade-up"
+          style={{ animationDelay: "550ms" }}
+        >
+          <h3 className={`text-sm font-bold uppercase tracking-wider ${level.color}`}>
+            {recommendations.title}
+          </h3>
+          <ul className="space-y-2">
+            {recommendations.tips.map((tip, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-foreground/90">
+                <Shield className="w-4 h-4 mt-0.5 shrink-0 text-primary" />
+                <span>{tip}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         {/* Ranking */}
-        <div className="opacity-0 animate-fade-up" style={{ animationDelay: "600ms" }}>
+        <div className="opacity-0 animate-fade-up" style={{ animationDelay: "700ms" }}>
           <Ranking />
         </div>
 
