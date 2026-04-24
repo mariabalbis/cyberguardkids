@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import CategorySelect from "@/components/CategorySelect";
 import QuizQuestion from "@/components/QuizQuestion";
@@ -9,11 +9,31 @@ import { Shield } from "lucide-react";
 
 type Phase = "welcome" | "category" | "quiz" | "result";
 
+const LAST_CATEGORY_KEY = "cyberquiz:last-category";
+
+const isValidCategory = (value: string | null): value is Category | "all" => {
+  if (!value) return false;
+  if (value === "all") return true;
+  return categories.some((c) => c.id === value);
+};
+
 const Index = () => {
   const [phase, setPhase] = useState<Phase>("welcome");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<Category | "all">("all");
+  const [selectedCategory, setSelectedCategory] = useState<Category | "all">(() => {
+    if (typeof window === "undefined") return "all";
+    const stored = window.localStorage.getItem(LAST_CATEGORY_KEY);
+    return isValidCategory(stored) ? stored : "all";
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LAST_CATEGORY_KEY, selectedCategory);
+    } catch {
+      // ignore
+    }
+  }, [selectedCategory]);
 
   const questions = useMemo(
     () =>
