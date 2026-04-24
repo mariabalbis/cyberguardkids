@@ -21,6 +21,8 @@ const levelStyles: Record<RankingEntry["level"], { color: string; icon: typeof T
 const HistoryPage = () => {
   const [version, setVersion] = useState(0);
   const history = useMemo(() => getHistory(), [version]);
+  const weekly = useMemo(() => getWeeklyProgress(), [version]);
+  const streak = useMemo(() => getStreak(), [version]);
 
   const stats = useMemo(() => {
     if (history.length === 0) return null;
@@ -38,6 +40,17 @@ const HistoryPage = () => {
   const handleClear = () => {
     if (confirm("Tem certeza que deseja apagar todo o histórico?")) {
       clearHistory();
+      setVersion((v) => v + 1);
+    }
+  };
+
+  const handleEditGoal = () => {
+    const current = getWeeklyGoal();
+    const input = prompt("Defina sua meta semanal de quizzes (1 a 50):", String(current));
+    if (input === null) return;
+    const n = parseInt(input, 10);
+    if (Number.isFinite(n) && n > 0) {
+      setWeeklyGoal(n);
       setVersion((v) => v + 1);
     }
   };
