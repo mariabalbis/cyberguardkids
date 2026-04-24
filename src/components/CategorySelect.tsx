@@ -1,12 +1,14 @@
-import { ArrowLeft, Layers } from "lucide-react";
+import { ArrowLeft, Layers, Check } from "lucide-react";
 import { categories, questions, Category } from "@/data/questions";
+import { cn } from "@/lib/utils";
 
 interface CategorySelectProps {
   onSelect: (category: Category | "all") => void;
   onBack: () => void;
+  selected?: Category | "all";
 }
 
-const CategorySelect = ({ onSelect, onBack }: CategorySelectProps) => {
+const CategorySelect = ({ onSelect, onBack, selected }: CategorySelectProps) => {
   const countFor = (id: Category) => questions.filter((q) => q.category === id).length;
 
   return (
@@ -28,13 +30,21 @@ const CategorySelect = ({ onSelect, onBack }: CategorySelectProps) => {
           </h2>
           <p className="text-sm text-muted-foreground">
             Selecione uma categoria ou jogue com todas as perguntas.
+            {selected && (
+              <span className="block mt-1 text-xs text-accent font-mono">
+                Última escolha lembrada ✓
+              </span>
+            )}
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             onClick={() => onSelect("all")}
-            className="rounded-xl bg-card neon-border p-4 text-left transition-all duration-200 hover:brightness-110 active:scale-[0.98] card-glow sm:col-span-2"
+            className={cn(
+              "rounded-xl bg-card neon-border p-4 text-left transition-all duration-200 hover:brightness-110 active:scale-[0.98] card-glow sm:col-span-2",
+              selected === "all" && "ring-2 ring-primary"
+            )}
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -44,6 +54,7 @@ const CategorySelect = ({ onSelect, onBack }: CategorySelectProps) => {
                 <p className="text-sm font-semibold text-foreground">Todas as categorias</p>
                 <p className="text-xs text-muted-foreground">{questions.length} perguntas variadas</p>
               </div>
+              {selected === "all" && <Check className="w-4 h-4 text-primary" />}
             </div>
           </button>
 
@@ -51,7 +62,10 @@ const CategorySelect = ({ onSelect, onBack }: CategorySelectProps) => {
             <button
               key={cat.id}
               onClick={() => onSelect(cat.id)}
-              className="rounded-xl bg-card neon-border p-4 text-left transition-all duration-200 hover:brightness-110 active:scale-[0.98] opacity-0 animate-fade-up"
+              className={cn(
+                "rounded-xl bg-card neon-border p-4 text-left transition-all duration-200 hover:brightness-110 active:scale-[0.98] opacity-0 animate-fade-up",
+                selected === cat.id && "ring-2 ring-primary"
+              )}
               style={{ animationDelay: `${100 + i * 80}ms` }}
             >
               <div className="flex items-start gap-3">
@@ -63,6 +77,7 @@ const CategorySelect = ({ onSelect, onBack }: CategorySelectProps) => {
                     {countFor(cat.id)} perguntas
                   </p>
                 </div>
+                {selected === cat.id && <Check className="w-4 h-4 text-primary shrink-0" />}
               </div>
             </button>
           ))}
