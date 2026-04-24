@@ -81,7 +81,15 @@ const Index = () => {
     return <CategorySelect onSelect={handleSelectCategory} onBack={handleRestart} selected={selectedCategory} />;
 
   if (phase === "result") {
-    return <QuizResult score={score} total={questions.length * 10} onRestart={handleRestart} />;
+    return (
+      <QuizResult
+        score={score}
+        total={questions.length * 10}
+        onRestart={handleRestart}
+        category={selectedCategory}
+        categoryLabel={categoryLabel}
+      />
+    );
   }
 
   return (

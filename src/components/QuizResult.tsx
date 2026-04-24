@@ -8,6 +8,8 @@ interface QuizResultProps {
   score: number;
   total: number;
   onRestart: () => void;
+  category?: string;
+  categoryLabel?: string;
 }
 
 const getLevel = (percentage: number) => {
@@ -55,7 +57,7 @@ const getRecommendations = (level: string): { title: string; tips: string[] } =>
   };
 };
 
-const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
+const QuizResult = ({ score, total, onRestart, category, categoryLabel }: QuizResultProps) => {
   const percentage = Math.round((score / total) * 100);
   const level = getLevel(percentage);
   const LevelIcon = level.icon;
@@ -65,10 +67,10 @@ const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
 
   useEffect(() => {
     if (!saved) {
-      addToRanking(score, total);
+      addToRanking(score, total, { category, categoryLabel });
       setSaved(true);
     }
-  }, [score, total, saved]);
+  }, [score, total, saved, category, categoryLabel]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12 bg-grid">
