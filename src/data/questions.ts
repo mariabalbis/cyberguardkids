@@ -1,3 +1,25 @@
+export type Category =
+  | "senhas"
+  | "golpes"
+  | "privacidade"
+  | "redes-sociais"
+  | "dispositivos";
+
+export interface CategoryInfo {
+  id: Category;
+  label: string;
+  description: string;
+  icon: string;
+}
+
+export const categories: CategoryInfo[] = [
+  { id: "senhas", label: "Senhas", description: "Como criar e proteger suas senhas", icon: "🔑" },
+  { id: "golpes", label: "Golpes & Fraudes", description: "Phishing, engenharia social e mais", icon: "🎣" },
+  { id: "privacidade", label: "Privacidade", description: "Seus dados e a LGPD", icon: "🕵️" },
+  { id: "redes-sociais", label: "Redes Sociais", description: "Convivência segura online", icon: "💬" },
+  { id: "dispositivos", label: "Dispositivos & Web", description: "Wi-Fi, apps, navegadores", icon: "📱" },
+];
+
 export interface Question {
   id: number;
   question: string;
@@ -6,6 +28,7 @@ export interface Question {
   explanationCorrect: string;
   explanationWrong: string;
   difficulty: "iniciante" | "intermediário" | "avançado";
+  category: Category;
 }
 
 export const questions: Question[] = [
