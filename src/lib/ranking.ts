@@ -11,8 +11,88 @@ export interface RankingEntry {
 
 const RANKING_KEY = "cyberquiz-ranking";
 const HISTORY_KEY = "cyberquiz-history";
+const WEEKLY_GOAL_KEY = "cyberquiz-weekly-goal";
 const MAX_RANKING = 10;
 const MAX_HISTORY = 50;
+export const DEFAULT_WEEKLY_GOAL = 3;
+
+// Returns the Monday 00:00 timestamp of the week containing `date`.
+const getWeekStart = (date: Date): number => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay(); // 0 (Sun) - 6 (Sat)
+  const diff = (day + 6) % 7; // days since Monday
+  d.setDate(d.getDate() - diff);
+  return d.getTime();
+};
+
+const startOfDay = (ts: number): number => {
+  const d = new Date(ts);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+};
+
+const ONE_DAY = 24 * 60 * 60 * 1000;
+
+export function getWeeklyGoal(): number {
+  try {
+    const v = localStorage.getItem(WEEKLY_GOAL_KEY);
+    const n = v ? parseInt(v, 10) : NaN;
+    return Number.isFinite(n) && n > 0 ? n : DEFAULT_WEEKLY_GOAL;
+  } catch {
+    return DEFAULT_WEEKLY_GOAL;
+  }
+}
+
+export function setWeeklyGoal(goal: number) {
+  try {
+    localStorage.setItem(WEEKLY_GOAL_KEY, String(Math.max(1, Math.min(50, Math.round(goal)))));
+  } catch {
+    // ignore
+  }
+}
+
+export function getWeeklyProgress(): { count: number; goal: number; weekStart: number } {
+  const goal = getWeeklyGoal();
+  const weekStart = getWeekStart(new Date());
+  const history = readList(HISTORY_KEY);
+  const count = history.filter((e) => (e.timestamp ?? 0) >= weekStart).length;
+  return { count, goal, weekStart };
+}
+
+export function getStreak(): { current: number; longest: number } {
+  const history = readList(HISTORY_KEY);
+  if (history.length === 0) return { current: 0, longest: 0 };
+
+  // unique days that have at least one attempt
+  const days = Array.from(
+    new Set(history.map((e) => startOfDay(e.timestamp ?? 0)))
+  ).sort((a, b) => a - b);
+
+  let longest = 1;
+  let run = 1;
+  for (let i = 1; i < days.length; i++) {
+    if (days[i] - days[i - 1] === ONE_DAY) {
+      run++;
+      longest = Math.max(longest, run);
+    } else {
+      run = 1;
+    }
+  }
+
+  // current streak: counting back from today (or yesterday if no quiz today)
+  const today = startOfDay(Date.now());
+  const daySet = new Set(days);
+  let current = 0;
+  let cursor = today;
+  if (!daySet.has(cursor)) cursor -= ONE_DAY; // allow yesterday-based streak
+  while (daySet.has(cursor)) {
+    current++;
+    cursor -= ONE_DAY;
+  }
+
+  return { current, longest };
+}
 
 const getLevelFromPercentage = (percentage: number): RankingEntry["level"] => {
   if (percentage >= 80) return "Avançado";

@@ -1,7 +1,15 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2 } from "lucide-react";
-import { getHistory, clearHistory, RankingEntry } from "@/lib/ranking";
+import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2, Flame, Target, Pencil } from "lucide-react";
+import {
+  getHistory,
+  clearHistory,
+  RankingEntry,
+  getWeeklyProgress,
+  getStreak,
+  getWeeklyGoal,
+  setWeeklyGoal,
+} from "@/lib/ranking";
 import { useState } from "react";
 
 const levelStyles: Record<RankingEntry["level"], { color: string; icon: typeof Trophy }> = {
@@ -13,6 +21,8 @@ const levelStyles: Record<RankingEntry["level"], { color: string; icon: typeof T
 const HistoryPage = () => {
   const [version, setVersion] = useState(0);
   const history = useMemo(() => getHistory(), [version]);
+  const weekly = useMemo(() => getWeeklyProgress(), [version]);
+  const streak = useMemo(() => getStreak(), [version]);
 
   const stats = useMemo(() => {
     if (history.length === 0) return null;
@@ -30,6 +40,17 @@ const HistoryPage = () => {
   const handleClear = () => {
     if (confirm("Tem certeza que deseja apagar todo o histórico?")) {
       clearHistory();
+      setVersion((v) => v + 1);
+    }
+  };
+
+  const handleEditGoal = () => {
+    const current = getWeeklyGoal();
+    const input = prompt("Defina sua meta semanal de quizzes (1 a 50):", String(current));
+    if (input === null) return;
+    const n = parseInt(input, 10);
+    if (Number.isFinite(n) && n > 0) {
+      setWeeklyGoal(n);
       setVersion((v) => v + 1);
     }
   };
@@ -65,6 +86,12 @@ const HistoryPage = () => {
             Acompanhe suas tentativas, níveis e evolução como CyberGuardian.
           </p>
         </header>
+
+        {/* Weekly goal + streak — sempre visíveis para incentivar o jogo */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <WeeklyGoalCard count={weekly.count} goal={weekly.goal} onEdit={handleEditGoal} />
+          <StreakCard current={streak.current} longest={streak.longest} />
+        </div>
 
         {!stats ? (
           <div className="rounded-xl bg-card neon-border p-10 text-center text-sm text-muted-foreground">
@@ -215,6 +242,91 @@ const EvolutionChart = ({ entries }: { entries: RankingEntry[] }) => {
         </circle>
       ))}
     </svg>
+  );
+};
+
+const WeeklyGoalCard = ({
+  count,
+  goal,
+  onEdit,
+}: {
+  count: number;
+  goal: number;
+  onEdit: () => void;
+}) => {
+  const pct = Math.min(100, Math.round((count / goal) * 100));
+  const reached = count >= goal;
+  const remaining = Math.max(0, goal - count);
+  return (
+    <div className="rounded-xl bg-card neon-border p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Target className="w-4 h-4 text-primary" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Meta semanal
+          </span>
+        </div>
+        <button
+          onClick={onEdit}
+          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Editar meta semanal"
+        >
+          <Pencil className="w-3 h-3" /> editar
+        </button>
+      </div>
+      <div className="flex items-baseline justify-between">
+        <p className="text-2xl font-bold font-mono text-foreground">
+          {count}
+          <span className="text-sm text-muted-foreground font-normal"> / {goal}</span>
+        </p>
+        <span className={`text-xs font-semibold ${reached ? "text-accent" : "text-primary"}`}>
+          {pct}%
+        </span>
+      </div>
+      <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ease-out ${
+            reached ? "bg-gradient-to-r from-accent to-primary" : "bg-gradient-to-r from-primary to-accent"
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        {reached
+          ? "🎉 Meta da semana concluída! Continue treinando."
+          : `Faltam ${remaining} quiz${remaining === 1 ? "" : "zes"} para bater sua meta.`}
+      </p>
+    </div>
+  );
+};
+
+const StreakCard = ({ current, longest }: { current: number; longest: number }) => {
+  const active = current > 0;
+  return (
+    <div className="rounded-xl bg-card neon-border p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Flame className={`w-4 h-4 ${active ? "text-warning" : "text-muted-foreground"}`} />
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Sequência
+          </span>
+        </div>
+        <span className="text-[11px] text-muted-foreground">recorde {longest}d</span>
+      </div>
+      <div className="flex items-baseline gap-2">
+        <p className={`text-2xl font-bold font-mono ${active ? "text-warning" : "text-foreground"}`}>
+          {current}
+        </p>
+        <span className="text-sm text-muted-foreground">
+          {current === 1 ? "dia seguido" : "dias seguidos"}
+        </span>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        {active
+          ? "🔥 Você está numa boa! Faça um quiz hoje para manter."
+          : "Comece uma nova sequência fazendo um quiz hoje."}
+      </p>
+    </div>
   );
 };
 
