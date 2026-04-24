@@ -17,11 +17,42 @@ const getLevel = (percentage: number) => {
 };
 
 const getMessage = (percentage: number) => {
-  if (percentage === 100) return "Incrível! Você é um verdadeiro especialista em segurança digital! 🏆";
-  if (percentage >= 80) return "Excelente! Você está muito bem protegido na internet! 🛡️";
-  if (percentage >= 60) return "Bom trabalho! Você sabe bastante, mas ainda pode melhorar. 💪";
-  if (percentage >= 40) return "Você tem noções básicas, mas precisa se informar mais. 📚";
-  return "Cuidado! Você precisa aprender mais sobre segurança digital. ⚠️";
+  if (percentage === 100) return "Incrível! Você é um verdadeiro CyberGuardian, mestre da segurança digital! 🏆";
+  if (percentage >= 80) return "Excelente! Você é um CyberGuardian preparado para proteger a internet! 🛡️";
+  if (percentage >= 60) return "Bom trabalho, futuro CyberGuardian! Você sabe bastante, mas ainda pode evoluir. 💪";
+  if (percentage >= 40) return "Você tem noções básicas, CyberGuardian em treinamento — siga aprendendo! 📚";
+  return "Atenção, CyberGuardian iniciante! É hora de reforçar seus conhecimentos. ⚠️";
+};
+
+const getRecommendations = (level: string): { title: string; tips: string[] } => {
+  if (level === "Avançado") {
+    return {
+      title: "Recomendações para CyberGuardians Avançados",
+      tips: [
+        "Ative autenticação em duas etapas em todas as contas importantes.",
+        "Compartilhe seu conhecimento e ajude amigos e familiares a se protegerem.",
+        "Acompanhe notícias sobre novas ameaças e vazamentos de dados.",
+      ],
+    };
+  }
+  if (level === "Intermediário") {
+    return {
+      title: "Recomendações para CyberGuardians Intermediários",
+      tips: [
+        "Use um gerenciador de senhas para criar e guardar senhas fortes e únicas.",
+        "Desconfie de links e anexos suspeitos, mesmo de contatos conhecidos.",
+        "Revise as configurações de privacidade das suas redes sociais.",
+      ],
+    };
+  }
+  return {
+    title: "Recomendações para CyberGuardians Iniciantes",
+    tips: [
+      "Nunca compartilhe suas senhas — nem com amigos próximos.",
+      "Evite clicar em links recebidos por mensagens ou e-mails desconhecidos.",
+      "Mantenha seus aplicativos e sistema sempre atualizados.",
+    ],
+  };
 };
 
 const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
