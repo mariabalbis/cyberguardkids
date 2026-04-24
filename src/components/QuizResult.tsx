@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { achievements, Achievement } from "@/data/questions";
 import { addToRanking, RankingEntry } from "@/lib/ranking";
 import Ranking from "@/components/Ranking";
-import { RotateCcw, Trophy, Shield, Star } from "lucide-react";
+import { RotateCcw, Trophy, Shield, Star, History } from "lucide-react";
 
 interface QuizResultProps {
   score: number;
   total: number;
   onRestart: () => void;
+  category?: string;
+  categoryLabel?: string;
 }
 
 const getLevel = (percentage: number) => {
@@ -55,7 +58,7 @@ const getRecommendations = (level: string): { title: string; tips: string[] } =>
   };
 };
 
-const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
+const QuizResult = ({ score, total, onRestart, category, categoryLabel }: QuizResultProps) => {
   const percentage = Math.round((score / total) * 100);
   const level = getLevel(percentage);
   const LevelIcon = level.icon;
@@ -65,10 +68,10 @@ const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
 
   useEffect(() => {
     if (!saved) {
-      addToRanking(score, total);
+      addToRanking(score, total, { category, categoryLabel });
       setSaved(true);
     }
-  }, [score, total, saved]);
+  }, [score, total, saved, category, categoryLabel]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12 bg-grid">
@@ -153,17 +156,29 @@ const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
           <Ranking />
         </div>
 
-        {/* Restart */}
-        <button
-          onClick={onRestart}
-          className="mt-4 px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold
-            transition-all duration-200 hover:brightness-110 active:scale-[0.97] card-glow
-            inline-flex items-center gap-2 opacity-0 animate-fade-up"
-          style={{ animationDelay: "800ms" }}
-        >
-          <RotateCcw className="w-4 h-4" />
-          Jogar Novamente
-        </button>
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
+          <button
+            onClick={onRestart}
+            className="px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold
+              transition-all duration-200 hover:brightness-110 active:scale-[0.97] card-glow
+              inline-flex items-center gap-2 opacity-0 animate-fade-up"
+            style={{ animationDelay: "800ms" }}
+          >
+            <RotateCcw className="w-4 h-4" />
+            Jogar Novamente
+          </button>
+          <Link
+            to="/historico"
+            className="px-6 py-3.5 rounded-xl bg-card neon-border text-foreground font-semibold
+              transition-all duration-200 hover:brightness-110 active:scale-[0.97]
+              inline-flex items-center gap-2 opacity-0 animate-fade-up"
+            style={{ animationDelay: "850ms" }}
+          >
+            <History className="w-4 h-4" />
+            Ver Histórico
+          </Link>
+        </div>
       </div>
     </div>
   );

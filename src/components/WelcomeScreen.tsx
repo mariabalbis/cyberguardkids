@@ -1,4 +1,5 @@
 import { Shield, Zap, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface WelcomeScreenProps {
   onStart: () => void;
@@ -60,6 +61,14 @@ const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
         <p className="text-xs text-muted-foreground opacity-0 animate-fade-up" style={{ animationDelay: "600ms" }}>
           Descubra seu nível de segurança digital 🔒
         </p>
+
+        <Link
+          to="/historico"
+          className="inline-block text-xs text-accent hover:text-primary transition-colors opacity-0 animate-fade-up underline-offset-4 hover:underline"
+          style={{ animationDelay: "700ms" }}
+        >
+          Ver meu histórico →
+        </Link>
       </div>
     </div>
   );
