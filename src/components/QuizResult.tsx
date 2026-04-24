@@ -156,17 +156,29 @@ const QuizResult = ({ score, total, onRestart, category, categoryLabel }: QuizRe
           <Ranking />
         </div>
 
-        {/* Restart */}
-        <button
-          onClick={onRestart}
-          className="mt-4 px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold
-            transition-all duration-200 hover:brightness-110 active:scale-[0.97] card-glow
-            inline-flex items-center gap-2 opacity-0 animate-fade-up"
-          style={{ animationDelay: "800ms" }}
-        >
-          <RotateCcw className="w-4 h-4" />
-          Jogar Novamente
-        </button>
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
+          <button
+            onClick={onRestart}
+            className="px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold
+              transition-all duration-200 hover:brightness-110 active:scale-[0.97] card-glow
+              inline-flex items-center gap-2 opacity-0 animate-fade-up"
+            style={{ animationDelay: "800ms" }}
+          >
+            <RotateCcw className="w-4 h-4" />
+            Jogar Novamente
+          </button>
+          <Link
+            to="/historico"
+            className="px-6 py-3.5 rounded-xl bg-card neon-border text-foreground font-semibold
+              transition-all duration-200 hover:brightness-110 active:scale-[0.97]
+              inline-flex items-center gap-2 opacity-0 animate-fade-up"
+            style={{ animationDelay: "850ms" }}
+          >
+            <History className="w-4 h-4" />
+            Ver Histórico
+          </Link>
+        </div>
       </div>
     </div>
   );
