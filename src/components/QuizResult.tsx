@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { achievements, Achievement } from "@/data/questions";
 import { addToRanking, RankingEntry } from "@/lib/ranking";
 import Ranking from "@/components/Ranking";
-import { RotateCcw, Trophy, Shield, Star } from "lucide-react";
+import { RotateCcw, Trophy, Shield, Star, History } from "lucide-react";
 
 interface QuizResultProps {
   score: number;
