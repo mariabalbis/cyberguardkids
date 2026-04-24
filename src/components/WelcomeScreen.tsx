@@ -20,7 +20,7 @@ const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
         {/* Title */}
         <div className="space-y-3">
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1] text-glow">
-            CyberQuiz
+            CyberGuardian
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-md mx-auto">
             Teste seus conhecimentos sobre segurança digital e aprenda a se proteger na internet!
