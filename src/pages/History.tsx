@@ -87,6 +87,12 @@ const HistoryPage = () => {
           </p>
         </header>
 
+        {/* Weekly goal + streak — sempre visíveis para incentivar o jogo */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <WeeklyGoalCard count={weekly.count} goal={weekly.goal} onEdit={handleEditGoal} />
+          <StreakCard current={streak.current} longest={streak.longest} />
+        </div>
+
         {!stats ? (
           <div className="rounded-xl bg-card neon-border p-10 text-center text-sm text-muted-foreground">
             Você ainda não fez nenhum quiz. Jogue para começar a registrar sua evolução!
