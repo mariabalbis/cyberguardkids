@@ -30,7 +30,7 @@ const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
         {/* Features */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
-            { icon: Zap, label: "12 perguntas", sub: "sobre o dia a dia" },
+            { icon: Zap, label: "5 categorias", sub: "para escolher" },
             { icon: Shield, label: "3 níveis", sub: "de dificuldade" },
             { icon: Lock, label: "Conquistas", sub: "e medalhas" },
           ].map((item, i) => (
@@ -54,7 +54,7 @@ const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             opacity-0 animate-fade-up"
           style={{ animationDelay: "500ms" }}
         >
-          Iniciar Quiz
+          Escolher Tema
         </button>
 
         <p className="text-xs text-muted-foreground opacity-0 animate-fade-up" style={{ animationDelay: "600ms" }}>
