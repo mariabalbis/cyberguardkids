@@ -59,6 +59,7 @@ const QuizResult = ({ score, total, onRestart }: QuizResultProps) => {
   const percentage = Math.round((score / total) * 100);
   const level = getLevel(percentage);
   const LevelIcon = level.icon;
+  const recommendations = getRecommendations(level.label);
   const earnedAchievements = achievements.filter((a) => a.condition(score / 10, total / 10));
   const [saved, setSaved] = useState(false);
 
