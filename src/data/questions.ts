@@ -1,3 +1,25 @@
+export type Category =
+  | "senhas"
+  | "golpes"
+  | "privacidade"
+  | "redes-sociais"
+  | "dispositivos";
+
+export interface CategoryInfo {
+  id: Category;
+  label: string;
+  description: string;
+  icon: string;
+}
+
+export const categories: CategoryInfo[] = [
+  { id: "senhas", label: "Senhas", description: "Como criar e proteger suas senhas", icon: "🔑" },
+  { id: "golpes", label: "Golpes & Fraudes", description: "Phishing, engenharia social e mais", icon: "🎣" },
+  { id: "privacidade", label: "Privacidade", description: "Seus dados e a LGPD", icon: "🕵️" },
+  { id: "redes-sociais", label: "Redes Sociais", description: "Convivência segura online", icon: "💬" },
+  { id: "dispositivos", label: "Dispositivos & Web", description: "Wi-Fi, apps, navegadores", icon: "📱" },
+];
+
 export interface Question {
   id: number;
   question: string;
@@ -6,6 +28,7 @@ export interface Question {
   explanationCorrect: string;
   explanationWrong: string;
   difficulty: "iniciante" | "intermediário" | "avançado";
+  category: Category;
 }
 
 export const questions: Question[] = [
@@ -22,6 +45,7 @@ export const questions: Question[] = [
     explanationCorrect: "Exatamente! Sua senha é pessoal e intransferível. Nem mesmo amigos próximos devem ter acesso às suas contas.",
     explanationWrong: "Cuidado! Compartilhar senhas, mesmo com amigos, pode colocar sua conta em risco. Sua senha deve ser sempre secreta.",
     difficulty: "iniciante",
+    category: "senhas",
   },
   {
     id: 2,
@@ -36,6 +60,7 @@ export const questions: Question[] = [
     explanationCorrect: "Boa escolha! Desconhecidos na internet podem ter más intenções. Ignorem e bloqueiem contatos suspeitos.",
     explanationWrong: "Atenção! Conversar com desconhecidos online pode ser perigoso. Nunca compartilhe informações pessoais com pessoas que você não conhece na vida real.",
     difficulty: "iniciante",
+    category: "redes-sociais",
   },
   {
     id: 3,
@@ -50,6 +75,7 @@ export const questions: Question[] = [
     explanationCorrect: "Perfeito! Senhas fortes misturam letras maiúsculas, minúsculas, números e símbolos especiais.",
     explanationWrong: "Senhas simples são fáceis de adivinhar. Use combinações de letras, números e símbolos para criar senhas mais seguras.",
     difficulty: "iniciante",
+    category: "senhas",
   },
   {
     id: 4,
@@ -64,6 +90,7 @@ export const questions: Question[] = [
     explanationCorrect: "Isso mesmo! Redes Wi-Fi públicas podem ser inseguras. Evite acessar informações sensíveis quando estiver conectado a elas.",
     explanationWrong: "Wi-Fi público pode ser monitorado por hackers. Nunca acesse contas bancárias ou informações sensíveis em redes abertas.",
     difficulty: "intermediário",
+    category: "dispositivos",
   },
   {
     id: 5,
@@ -78,6 +105,7 @@ export const questions: Question[] = [
     explanationCorrect: "Correto! Sempre verifique a confiabilidade de um site antes de fornecer dados pessoais. Muitos sorteios são golpes.",
     explanationWrong: "Cuidado com golpes! Muitos sorteios falsos usam seus dados para fraudes. Sempre desconfie e verifique a fonte.",
     difficulty: "intermediário",
+    category: "golpes",
   },
   {
     id: 6,
@@ -92,6 +120,7 @@ export const questions: Question[] = [
     explanationCorrect: "Exato! O 2FA adiciona uma camada extra de proteção, como um código enviado ao seu celular, além da sua senha.",
     explanationWrong: "A autenticação em dois fatores (2FA) é uma proteção extra que pede uma segunda verificação além da senha, como um código no celular.",
     difficulty: "intermediário",
+    category: "dispositivos",
   },
   {
     id: 7,
@@ -106,6 +135,7 @@ export const questions: Question[] = [
     explanationCorrect: "Parabéns! Denunciar o cyberbullying e apoiar a vítima é a atitude certa. Todos merecem respeito online.",
     explanationWrong: "Cyberbullying é sério e pode causar muito sofrimento. A melhor atitude é denunciar e apoiar quem está sendo agredido.",
     difficulty: "intermediário",
+    category: "redes-sociais",
   },
   {
     id: 8,
@@ -120,6 +150,7 @@ export const questions: Question[] = [
     explanationCorrect: "Correto! Phishing usa mensagens falsas (e-mails, SMS) para enganar pessoas e roubar dados como senhas e cartões.",
     explanationWrong: "Phishing é uma fraude onde criminosos enviam mensagens falsas se passando por empresas para roubar seus dados pessoais.",
     difficulty: "avançado",
+    category: "golpes",
   },
   {
     id: 9,
@@ -134,6 +165,7 @@ export const questions: Question[] = [
     explanationCorrect: "Ótima escolha! Nunca clique em links de e-mails suspeitos. Sempre acesse sites digitando o endereço diretamente no navegador.",
     explanationWrong: "E-mails pedindo dados urgentemente são quase sempre golpes. Sempre acesse o site oficial digitando o endereço manualmente.",
     difficulty: "avançado",
+    category: "golpes",
   },
   {
     id: 10,
@@ -148,6 +180,7 @@ export const questions: Question[] = [
     explanationCorrect: "Perfeito! Manter o perfil privado e aceitar apenas conhecidos é a forma mais segura de usar redes sociais.",
     explanationWrong: "Perfis públicos expõem suas informações para qualquer pessoa. Mantenha-o privado e aceite apenas pessoas que você realmente conhece.",
     difficulty: "avançado",
+    category: "privacidade",
   },
   {
     id: 11,
@@ -162,6 +195,7 @@ export const questions: Question[] = [
     explanationCorrect: "Isso! A VPN cria um \"túnel\" seguro para seus dados, protegendo sua privacidade e dificultando o rastreamento online.",
     explanationWrong: "VPN (Rede Privada Virtual) criptografa sua conexão à internet, protegendo seus dados e sua privacidade enquanto navega.",
     difficulty: "avançado",
+    category: "dispositivos",
   },
   {
     id: 12,
@@ -176,6 +210,7 @@ export const questions: Question[] = [
     explanationCorrect: "Correto! Sempre baixe aplicativos de lojas oficiais. Sites desconhecidos podem conter malware e vírus.",
     explanationWrong: "Baixar apps de sites desconhecidos é muito arriscado. Use sempre as lojas oficiais para garantir que o app é seguro.",
     difficulty: "iniciante",
+    category: "dispositivos",
   },
   // ── Novas perguntas ──
   {
@@ -191,6 +226,7 @@ export const questions: Question[] = [
     explanationCorrect: "Correto! Pessoas online podem não ser quem dizem. Se for inevitável, vá sempre acompanhado e em local público.",
     explanationWrong: "Encontrar desconhecidos da internet sozinho é muito perigoso. Sempre conte a um adulto de confiança e, se for, vá acompanhado a um local público.",
     difficulty: "iniciante",
+    category: "redes-sociais",
   },
   {
     id: 14,
@@ -205,6 +241,7 @@ export const questions: Question[] = [
     explanationCorrect: "Exato! Você tem o direito de pedir a remoção e denunciar. Ninguém pode compartilhar suas imagens sem consentimento.",
     explanationWrong: "Compartilhar imagens de alguém sem permissão é errado e pode ser crime. Peça a remoção e denuncie se necessário.",
     difficulty: "iniciante",
+    category: "privacidade",
   },
   {
     id: 15,
@@ -219,6 +256,7 @@ export const questions: Question[] = [
     explanationCorrect: "Isso mesmo! O cadeado indica que a conexão usa HTTPS, protegendo os dados trocados entre você e o site.",
     explanationWrong: "O cadeado indica que a comunicação é criptografada via HTTPS. Porém, isso não garante que o site é legítimo — apenas que a conexão é segura.",
     difficulty: "intermediário",
+    category: "dispositivos",
   },
   {
     id: 16,
@@ -233,6 +271,7 @@ export const questions: Question[] = [
     explanationCorrect: "Perfeito! Revise cada permissão. Uma calculadora não precisa acessar sua câmera, por exemplo. Conceda apenas o necessário.",
     explanationWrong: "Apps maliciosos usam permissões excessivas para espionar você. Sempre analise e conceda apenas o estritamente necessário.",
     difficulty: "intermediário",
+    category: "dispositivos",
   },
   {
     id: 17,
@@ -247,6 +286,7 @@ export const questions: Question[] = [
     explanationCorrect: "Correto! Cookies guardam informações da sua visita, como preferências e login. Alguns rastreiam seus hábitos para publicidade.",
     explanationWrong: "Cookies são pequenos arquivos salvos pelo navegador. Eles podem ser úteis, mas alguns rastreiam sua atividade — por isso muitos sites pedem consentimento.",
     difficulty: "intermediário",
+    category: "privacidade",
   },
   {
     id: 18,
@@ -261,6 +301,7 @@ export const questions: Question[] = [
     explanationCorrect: "Exatamente! Verificar a informação em sites confiáveis antes de compartilhar ajuda a combater fake news e desinformação.",
     explanationWrong: "Fake news se espalham rápido porque as pessoas compartilham sem verificar. Cheque sempre em fontes confiáveis antes de repassar.",
     difficulty: "iniciante",
+    category: "dispositivos",
   },
   {
     id: 19,
@@ -275,6 +316,7 @@ export const questions: Question[] = [
     explanationCorrect: "Isso! Ransomware criptografa seus arquivos e exige pagamento para devolvê-los. Backup regular é a melhor prevenção.",
     explanationWrong: "Ransomware é um ataque que bloqueia seus arquivos e cobra resgate. Manter backups atualizados e não clicar em links suspeitos ajuda a se proteger.",
     difficulty: "avançado",
+    category: "golpes",
   },
   {
     id: 20,
@@ -289,6 +331,7 @@ export const questions: Question[] = [
     explanationCorrect: "Correto! Engenharia social usa manipulação psicológica — como urgência, medo ou confiança — para enganar pessoas e roubar dados.",
     explanationWrong: "Engenharia social é quando criminosos usam truques psicológicos para convencer você a revelar informações. Desconfie de pedidos urgentes ou histórias emocionais.",
     difficulty: "avançado",
+    category: "golpes",
   },
   {
     id: 21,
@@ -303,6 +346,7 @@ export const questions: Question[] = [
     explanationCorrect: "Perfeito! Gerenciadores de senhas criam e armazenam senhas únicas e fortes para cada serviço de forma segura e criptografada.",
     explanationWrong: "Usar a mesma senha em vários sites é perigoso. Se um vazar, todos são comprometidos. Gerenciadores de senhas resolvem isso com segurança.",
     difficulty: "avançado",
+    category: "senhas",
   },
   {
     id: 22,
@@ -317,6 +361,7 @@ export const questions: Question[] = [
     explanationCorrect: "Ótima atitude! Golpistas se passam por bancos e operadoras. Sempre entre em contato pelos canais oficiais para verificar.",
     explanationWrong: "Ligações urgentes pedindo dados são quase sempre golpe. Desligue e entre em contato com a instituição pelo número oficial.",
     difficulty: "intermediário",
+    category: "golpes",
   },
   {
     id: 23,
@@ -331,6 +376,7 @@ export const questions: Question[] = [
     explanationCorrect: "Exato! Uma vez publicado, qualquer pessoa pode ter feito captura de tela ou cópia. Na internet, nada é totalmente apagável.",
     explanationWrong: "Apagar algo não garante que desapareceu. Prints, caches e cópias podem manter seu conteúdo circulando. Pense antes de publicar.",
     difficulty: "iniciante",
+    category: "privacidade",
   },
   {
     id: 24,
@@ -345,6 +391,7 @@ export const questions: Question[] = [
     explanationCorrect: "Correto! A LGPD garante que suas informações pessoais sejam coletadas e usadas com transparência e seu consentimento.",
     explanationWrong: "A LGPD é a lei brasileira que protege seus dados pessoais, garantindo que empresas peçam permissão e expliquem como usam suas informações.",
     difficulty: "avançado",
+    category: "privacidade",
   },
   {
     id: 25,
@@ -359,6 +406,7 @@ export const questions: Question[] = [
     explanationCorrect: "Certo! Confie no antivírus e siga suas recomendações. Arquivos infectados podem causar grandes danos ao seu dispositivo e dados.",
     explanationWrong: "Ignorar alertas do antivírus pode expor seu dispositivo a malware. Sempre siga as recomendações de segurança do programa.",
     difficulty: "iniciante",
+    category: "dispositivos",
   },
 ];
 export interface Achievement {

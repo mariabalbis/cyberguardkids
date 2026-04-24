@@ -1,22 +1,42 @@
-import { useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import WelcomeScreen from "@/components/WelcomeScreen";
+import CategorySelect from "@/components/CategorySelect";
 import QuizQuestion from "@/components/QuizQuestion";
 import QuizProgress from "@/components/QuizProgress";
 import QuizResult from "@/components/QuizResult";
-import { questions } from "@/data/questions";
+import { questions as allQuestions, Category, categories } from "@/data/questions";
 import { Shield } from "lucide-react";
 
-type Phase = "welcome" | "quiz" | "result";
+type Phase = "welcome" | "category" | "quiz" | "result";
 
 const Index = () => {
   const [phase, setPhase] = useState<Phase>("welcome");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<Category | "all">("all");
+
+  const questions = useMemo(
+    () =>
+      selectedCategory === "all"
+        ? allQuestions
+        : allQuestions.filter((q) => q.category === selectedCategory),
+    [selectedCategory]
+  );
+
+  const categoryLabel =
+    selectedCategory === "all"
+      ? "Todas as categorias"
+      : categories.find((c) => c.id === selectedCategory)?.label ?? "";
 
   const handleStart = useCallback(() => {
-    setPhase("quiz");
+    setPhase("category");
+  }, []);
+
+  const handleSelectCategory = useCallback((cat: Category | "all") => {
+    setSelectedCategory(cat);
     setCurrentQuestion(0);
     setScore(0);
+    setPhase("quiz");
   }, []);
 
   const handleAnswer = useCallback((correct: boolean) => {
@@ -27,7 +47,7 @@ const Index = () => {
     } else {
       setCurrentQuestion((c) => c + 1);
     }
-  }, [currentQuestion]);
+  }, [currentQuestion, questions.length]);
 
   const handleRestart = useCallback(() => {
     setPhase("welcome");
@@ -36,6 +56,9 @@ const Index = () => {
   }, []);
 
   if (phase === "welcome") return <WelcomeScreen onStart={handleStart} />;
+
+  if (phase === "category")
+    return <CategorySelect onSelect={handleSelectCategory} onBack={handleRestart} />;
 
   if (phase === "result") {
     return <QuizResult score={score} total={questions.length * 10} onRestart={handleRestart} />;
@@ -48,6 +71,9 @@ const Index = () => {
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-primary" />
           <span className="font-semibold text-sm">CyberQuiz</span>
+          <span className="hidden sm:inline text-xs text-muted-foreground ml-2">
+            · {categoryLabel}
+          </span>
         </div>
         <button
           onClick={handleRestart}
