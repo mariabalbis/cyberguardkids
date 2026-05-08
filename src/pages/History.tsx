@@ -113,8 +113,8 @@ const HistoryPage = () => {
           <StreakCard current={streak.current} longest={streak.longest} />
         </div>
 
-        {/* Calendário de atividade */}
-        <ActivityCalendar history={history} />
+        {/* Calendário de atividade com seletor de período */}
+        <ActivityCalendar history={history} weeks={calendarWeeks} onWeeksChange={setCalendarWeeks} />
 
         {!stats ? (
           <div className="rounded-xl bg-card neon-border p-10 text-center text-sm text-muted-foreground">
@@ -130,7 +130,6 @@ const HistoryPage = () => {
           </div>
         ) : (
           <>
-            {/* Summary stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <StatCard label="Tentativas" value={stats.total.toString()} />
               <StatCard label="Média" value={`${stats.avg}%`} />
@@ -142,7 +141,6 @@ const HistoryPage = () => {
               />
             </div>
 
-            {/* Evolution chart */}
             <div className="rounded-xl bg-card neon-border p-5 space-y-4">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                 Evolução ao longo do tempo
@@ -150,45 +148,93 @@ const HistoryPage = () => {
               <EvolutionChart entries={stats.ordered} />
             </div>
 
-            {/* Attempts list */}
+            {/* Attempts list with level filter and expandable details */}
             <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                Tentativas recentes
-              </h2>
-              <div className="space-y-2">
-                {history.map((entry, i) => {
-                  const { color, icon: Icon } = levelStyles[entry.level];
-                  return (
-                    <div
-                      key={`${entry.timestamp}-${i}`}
-                      className="rounded-xl bg-card neon-border p-4 flex items-center gap-4"
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                  Tentativas recentes
+                </h2>
+                <div className="flex flex-wrap gap-1">
+                  {LEVEL_FILTERS.map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => setLevelFilter(f.value)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+                        levelFilter === f.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                      }`}
                     >
-                      <div className={`shrink-0 w-10 h-10 rounded-lg bg-muted/30 flex items-center justify-center ${color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                          <span className={`text-xs font-semibold uppercase tracking-wider ${color}`}>
-                            {entry.level}
-                          </span>
-                          <span className="text-xs text-muted-foreground">·</span>
-                          <span className="text-xs text-muted-foreground truncate">
-                            {entry.categoryLabel}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{entry.date}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-lg font-bold font-mono text-foreground">
-                          {entry.score}
-                          <span className="text-xs text-muted-foreground font-normal"> / {entry.total}</span>
-                        </p>
-                        <p className="text-xs font-semibold text-primary">{entry.percentage}%</p>
-                      </div>
-                    </div>
-                  );
-                })}
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {filteredHistory.length === 0 ? (
+                <div className="rounded-xl bg-card neon-border p-6 text-center text-xs text-muted-foreground">
+                  Nenhuma tentativa neste nível ainda.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredHistory.map((entry, i) => {
+                    const { color, icon: Icon } = levelStyles[entry.level];
+                    const key = `${entry.timestamp}-${i}`;
+                    const expanded = expandedKey === key;
+                    const wrong = Math.max(0, entry.total - entry.score);
+                    const time = new Date(entry.timestamp ?? 0).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                    return (
+                      <div key={key} className="rounded-xl bg-card neon-border overflow-hidden">
+                        <button
+                          onClick={() => setExpandedKey(expanded ? null : key)}
+                          className="w-full p-4 flex items-center gap-4 text-left hover:bg-muted/20 transition-colors"
+                        >
+                          <div className={`shrink-0 w-10 h-10 rounded-lg bg-muted/30 flex items-center justify-center ${color}`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-2 flex-wrap">
+                              <span className={`text-xs font-semibold uppercase tracking-wider ${color}`}>
+                                {entry.level}
+                              </span>
+                              <span className="text-xs text-muted-foreground">·</span>
+                              <span className="text-xs text-muted-foreground truncate">
+                                {entry.categoryLabel}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{entry.date}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-lg font-bold font-mono text-foreground">
+                              {entry.score}
+                              <span className="text-xs text-muted-foreground font-normal"> / {entry.total}</span>
+                            </p>
+                            <p className="text-xs font-semibold text-primary">{entry.percentage}%</p>
+                          </div>
+                          <ChevronDown
+                            className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                        {expanded && (
+                          <div className="px-4 pb-4 pt-0 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs border-t border-border/50">
+                            <DetailItem label="Categoria" value={entry.categoryLabel} />
+                            <DetailItem label="Nível" value={entry.level} valueClass={color} />
+                            <DetailItem label="Acertos" value={`${entry.score} de ${entry.total}`} />
+                            <DetailItem label="Erros" value={String(wrong)} valueClass={wrong > 0 ? "text-destructive" : ""} />
+                            <DetailItem label="Aproveitamento" value={`${entry.percentage}%`} valueClass="text-primary" />
+                            <DetailItem label="Data" value={entry.date} />
+                            <DetailItem label="Horário" value={time} />
+                            <DetailItem label="ID da categoria" value={entry.category} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </>
         )}
