@@ -33,7 +33,14 @@ const levelStyles: Record<RankingEntry["level"], { color: string; icon: typeof T
 
 const HistoryPage = () => {
   const [version, setVersion] = useState(0);
+  const [levelFilter, setLevelFilter] = useState<LevelFilter>("all");
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [calendarWeeks, setCalendarWeeks] = useState<number>(14);
   const history = useMemo(() => getHistory(), [version]);
+  const filteredHistory = useMemo(
+    () => (levelFilter === "all" ? history : history.filter((e) => e.level === levelFilter)),
+    [history, levelFilter]
+  );
   const weekly = useMemo(() => getWeeklyProgress(), [version]);
   const streak = useMemo(() => getStreak(), [version]);
 
