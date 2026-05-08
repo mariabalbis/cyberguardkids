@@ -482,9 +482,26 @@ const ActivityCalendar = ({
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
           Calendário de atividade
         </h2>
-        <span className="text-[11px] text-muted-foreground">
-          {totalDays} {totalDays === 1 ? "dia ativo" : "dias ativos"} nas últimas {WEEKS_TO_SHOW} semanas
-        </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-wrap gap-1">
+            {PERIOD_OPTIONS.map((p) => (
+              <button
+                key={p.weeks}
+                onClick={() => onWeeksChange(p.weeks)}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                  WEEKS_TO_SHOW === p.weeks
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <span className="text-[11px] text-muted-foreground">
+            {totalDays} {totalDays === 1 ? "dia ativo" : "dias ativos"}
+          </span>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
