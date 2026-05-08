@@ -333,4 +333,135 @@ const StreakCard = ({ current, longest }: { current: number; longest: number }) 
   );
 };
 
+const WEEKS_TO_SHOW = 14;
+const DAY_LABELS = ["S", "T", "Q", "Q", "S", "S", "D"];
+const MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+const ActivityCalendar = ({ history }: { history: RankingEntry[] }) => {
+  const { weeks, monthMarkers, totalDays, maxCount } = useMemo(() => {
+    const counts = new Map<number, number>();
+    history.forEach((e) => {
+      const d = new Date(e.timestamp ?? 0);
+      d.setHours(0, 0, 0, 0);
+      counts.set(d.getTime(), (counts.get(d.getTime()) ?? 0) + 1);
+    });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const day = today.getDay();
+    const diff = (day + 6) % 7;
+    const currentMonday = new Date(today);
+    currentMonday.setDate(today.getDate() - diff);
+
+    const startMonday = new Date(currentMonday);
+    startMonday.setDate(currentMonday.getDate() - (WEEKS_TO_SHOW - 1) * 7);
+
+    const weeks: { ts: number; count: number; isFuture: boolean; isToday: boolean }[][] = [];
+    const monthMarkers: { weekIndex: number; label: string }[] = [];
+    let lastMonth = -1;
+    let max = 0;
+    let total = 0;
+    const todayTs = today.getTime();
+
+    for (let w = 0; w < WEEKS_TO_SHOW; w++) {
+      const week: { ts: number; count: number; isFuture: boolean; isToday: boolean }[] = [];
+      for (let d = 0; d < 7; d++) {
+        const date = new Date(startMonday);
+        date.setDate(startMonday.getDate() + w * 7 + d);
+        const ts = date.getTime();
+        const count = counts.get(ts) ?? 0;
+        if (count > 0) total++;
+        if (count > max) max = count;
+        week.push({ ts, count, isFuture: ts > todayTs, isToday: ts === todayTs });
+        if (d === 0) {
+          const m = date.getMonth();
+          if (m !== lastMonth) {
+            monthMarkers.push({ weekIndex: w, label: MONTH_LABELS[m] });
+            lastMonth = m;
+          }
+        }
+      }
+      weeks.push(week);
+    }
+    return { weeks, monthMarkers, totalDays: total, maxCount: max };
+  }, [history]);
+
+  const intensityClass = (count: number) => {
+    if (count === 0) return "bg-muted/40";
+    if (maxCount <= 1) return "bg-primary";
+    const ratio = count / maxCount;
+    if (ratio > 0.66) return "bg-primary";
+    if (ratio > 0.33) return "bg-primary/70";
+    return "bg-primary/40";
+  };
+
+  return (
+    <div className="rounded-xl bg-card neon-border p-5 space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          Calendário de atividade
+        </h2>
+        <span className="text-[11px] text-muted-foreground">
+          {totalDays} {totalDays === 1 ? "dia ativo" : "dias ativos"} nas últimas {WEEKS_TO_SHOW} semanas
+        </span>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="inline-flex flex-col gap-1">
+          <div className="flex gap-1 pl-6">
+            {weeks.map((_, wi) => {
+              const marker = monthMarkers.find((m) => m.weekIndex === wi);
+              return (
+                <div key={wi} className="w-3.5 text-[9px] text-muted-foreground">
+                  {marker?.label ?? ""}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex gap-1">
+            <div className="flex flex-col gap-1 pr-1">
+              {DAY_LABELS.map((l, i) => (
+                <div key={i} className="h-3.5 w-4 text-[9px] leading-[14px] text-muted-foreground">
+                  {i % 2 === 1 ? l : ""}
+                </div>
+              ))}
+            </div>
+
+            {weeks.map((week, wi) => (
+              <div key={wi} className="flex flex-col gap-1">
+                {week.map((cell, di) => {
+                  const date = new Date(cell.ts);
+                  const dateStr = date.toLocaleDateString("pt-BR");
+                  const title = cell.isFuture
+                    ? dateStr
+                    : `${dateStr} · ${cell.count} quiz${cell.count === 1 ? "" : "zes"}`;
+                  return (
+                    <div
+                      key={di}
+                      title={title}
+                      className={`w-3.5 h-3.5 rounded-sm transition-all ${
+                        cell.isFuture ? "bg-transparent" : intensityClass(cell.count)
+                      } ${cell.isToday ? "ring-1 ring-accent" : ""}`}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-end gap-2 text-[10px] text-muted-foreground">
+        <span>menos</span>
+        <span className="w-3 h-3 rounded-sm bg-muted/40" />
+        <span className="w-3 h-3 rounded-sm bg-primary/40" />
+        <span className="w-3 h-3 rounded-sm bg-primary/70" />
+        <span className="w-3 h-3 rounded-sm bg-primary" />
+        <span>mais</span>
+      </div>
+    </div>
+  );
+};
+
 export default HistoryPage;
