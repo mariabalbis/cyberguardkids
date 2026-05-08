@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2, Flame, Target, Pencil } from "lucide-react";
+import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2, Flame, Target, Pencil, ChevronDown } from "lucide-react";
 import {
   getHistory,
   clearHistory,
@@ -10,7 +10,20 @@ import {
   getWeeklyGoal,
   setWeeklyGoal,
 } from "@/lib/ranking";
-import { useState } from "react";
+
+type LevelFilter = "all" | RankingEntry["level"];
+const LEVEL_FILTERS: { value: LevelFilter; label: string }[] = [
+  { value: "all", label: "Todos" },
+  { value: "Iniciante", label: "Iniciante" },
+  { value: "Intermediário", label: "Intermediário" },
+  { value: "Avançado", label: "Avançado" },
+];
+const PERIOD_OPTIONS = [
+  { weeks: 8, label: "2 meses" },
+  { weeks: 14, label: "3 meses" },
+  { weeks: 26, label: "6 meses" },
+  { weeks: 52, label: "1 ano" },
+];
 
 const levelStyles: Record<RankingEntry["level"], { color: string; icon: typeof Trophy }> = {
   Avançado: { color: "text-accent", icon: Trophy },
@@ -20,7 +33,14 @@ const levelStyles: Record<RankingEntry["level"], { color: string; icon: typeof T
 
 const HistoryPage = () => {
   const [version, setVersion] = useState(0);
+  const [levelFilter, setLevelFilter] = useState<LevelFilter>("all");
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [calendarWeeks, setCalendarWeeks] = useState<number>(14);
   const history = useMemo(() => getHistory(), [version]);
+  const filteredHistory = useMemo(
+    () => (levelFilter === "all" ? history : history.filter((e) => e.level === levelFilter)),
+    [history, levelFilter]
+  );
   const weekly = useMemo(() => getWeeklyProgress(), [version]);
   const streak = useMemo(() => getStreak(), [version]);
 
@@ -93,8 +113,8 @@ const HistoryPage = () => {
           <StreakCard current={streak.current} longest={streak.longest} />
         </div>
 
-        {/* Calendário de atividade */}
-        <ActivityCalendar history={history} />
+        {/* Calendário de atividade com seletor de período */}
+        <ActivityCalendar history={history} weeks={calendarWeeks} onWeeksChange={setCalendarWeeks} />
 
         {!stats ? (
           <div className="rounded-xl bg-card neon-border p-10 text-center text-sm text-muted-foreground">
@@ -110,7 +130,6 @@ const HistoryPage = () => {
           </div>
         ) : (
           <>
-            {/* Summary stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <StatCard label="Tentativas" value={stats.total.toString()} />
               <StatCard label="Média" value={`${stats.avg}%`} />
@@ -122,7 +141,6 @@ const HistoryPage = () => {
               />
             </div>
 
-            {/* Evolution chart */}
             <div className="rounded-xl bg-card neon-border p-5 space-y-4">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                 Evolução ao longo do tempo
@@ -130,45 +148,93 @@ const HistoryPage = () => {
               <EvolutionChart entries={stats.ordered} />
             </div>
 
-            {/* Attempts list */}
+            {/* Attempts list with level filter and expandable details */}
             <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                Tentativas recentes
-              </h2>
-              <div className="space-y-2">
-                {history.map((entry, i) => {
-                  const { color, icon: Icon } = levelStyles[entry.level];
-                  return (
-                    <div
-                      key={`${entry.timestamp}-${i}`}
-                      className="rounded-xl bg-card neon-border p-4 flex items-center gap-4"
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                  Tentativas recentes
+                </h2>
+                <div className="flex flex-wrap gap-1">
+                  {LEVEL_FILTERS.map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => setLevelFilter(f.value)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+                        levelFilter === f.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                      }`}
                     >
-                      <div className={`shrink-0 w-10 h-10 rounded-lg bg-muted/30 flex items-center justify-center ${color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                          <span className={`text-xs font-semibold uppercase tracking-wider ${color}`}>
-                            {entry.level}
-                          </span>
-                          <span className="text-xs text-muted-foreground">·</span>
-                          <span className="text-xs text-muted-foreground truncate">
-                            {entry.categoryLabel}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{entry.date}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-lg font-bold font-mono text-foreground">
-                          {entry.score}
-                          <span className="text-xs text-muted-foreground font-normal"> / {entry.total}</span>
-                        </p>
-                        <p className="text-xs font-semibold text-primary">{entry.percentage}%</p>
-                      </div>
-                    </div>
-                  );
-                })}
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {filteredHistory.length === 0 ? (
+                <div className="rounded-xl bg-card neon-border p-6 text-center text-xs text-muted-foreground">
+                  Nenhuma tentativa neste nível ainda.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredHistory.map((entry, i) => {
+                    const { color, icon: Icon } = levelStyles[entry.level];
+                    const key = `${entry.timestamp}-${i}`;
+                    const expanded = expandedKey === key;
+                    const wrong = Math.max(0, entry.total - entry.score);
+                    const time = new Date(entry.timestamp ?? 0).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                    return (
+                      <div key={key} className="rounded-xl bg-card neon-border overflow-hidden">
+                        <button
+                          onClick={() => setExpandedKey(expanded ? null : key)}
+                          className="w-full p-4 flex items-center gap-4 text-left hover:bg-muted/20 transition-colors"
+                        >
+                          <div className={`shrink-0 w-10 h-10 rounded-lg bg-muted/30 flex items-center justify-center ${color}`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-2 flex-wrap">
+                              <span className={`text-xs font-semibold uppercase tracking-wider ${color}`}>
+                                {entry.level}
+                              </span>
+                              <span className="text-xs text-muted-foreground">·</span>
+                              <span className="text-xs text-muted-foreground truncate">
+                                {entry.categoryLabel}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{entry.date}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-lg font-bold font-mono text-foreground">
+                              {entry.score}
+                              <span className="text-xs text-muted-foreground font-normal"> / {entry.total}</span>
+                            </p>
+                            <p className="text-xs font-semibold text-primary">{entry.percentage}%</p>
+                          </div>
+                          <ChevronDown
+                            className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                        {expanded && (
+                          <div className="px-4 pb-4 pt-0 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs border-t border-border/50">
+                            <DetailItem label="Categoria" value={entry.categoryLabel} />
+                            <DetailItem label="Nível" value={entry.level} valueClass={color} />
+                            <DetailItem label="Acertos" value={`${entry.score} de ${entry.total}`} />
+                            <DetailItem label="Erros" value={String(wrong)} valueClass={wrong > 0 ? "text-destructive" : ""} />
+                            <DetailItem label="Aproveitamento" value={`${entry.percentage}%`} valueClass="text-primary" />
+                            <DetailItem label="Data" value={entry.date} />
+                            <DetailItem label="Horário" value={time} />
+                            <DetailItem label="ID da categoria" value={entry.category} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </>
         )}
@@ -333,11 +399,26 @@ const StreakCard = ({ current, longest }: { current: number; longest: number }) 
   );
 };
 
-const WEEKS_TO_SHOW = 14;
+const DAY_LABELS_OFFSET = 0;
 const DAY_LABELS = ["S", "T", "Q", "Q", "S", "S", "D"];
 const MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-const ActivityCalendar = ({ history }: { history: RankingEntry[] }) => {
+const DetailItem = ({ label, value, valueClass = "" }: { label: string; value: string; valueClass?: string }) => (
+  <div>
+    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+    <p className={`text-xs font-semibold mt-0.5 ${valueClass || "text-foreground"}`}>{value}</p>
+  </div>
+);
+
+const ActivityCalendar = ({
+  history,
+  weeks: WEEKS_TO_SHOW,
+  onWeeksChange,
+}: {
+  history: RankingEntry[];
+  weeks: number;
+  onWeeksChange: (n: number) => void;
+}) => {
   const { weeks, monthMarkers, totalDays, maxCount } = useMemo(() => {
     const counts = new Map<number, number>();
     history.forEach((e) => {
@@ -401,9 +482,26 @@ const ActivityCalendar = ({ history }: { history: RankingEntry[] }) => {
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
           Calendário de atividade
         </h2>
-        <span className="text-[11px] text-muted-foreground">
-          {totalDays} {totalDays === 1 ? "dia ativo" : "dias ativos"} nas últimas {WEEKS_TO_SHOW} semanas
-        </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-wrap gap-1">
+            {PERIOD_OPTIONS.map((p) => (
+              <button
+                key={p.weeks}
+                onClick={() => onWeeksChange(p.weeks)}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                  WEEKS_TO_SHOW === p.weeks
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <span className="text-[11px] text-muted-foreground">
+            {totalDays} {totalDays === 1 ? "dia ativo" : "dias ativos"}
+          </span>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
