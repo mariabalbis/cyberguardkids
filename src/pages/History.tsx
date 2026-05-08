@@ -399,7 +399,7 @@ const StreakCard = ({ current, longest }: { current: number; longest: number }) 
   );
 };
 
-const WEEKS_TO_SHOW = 14;
+const DAY_LABELS_OFFSET = 0;
 const DAY_LABELS = ["S", "T", "Q", "Q", "S", "S", "D"];
 const MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
