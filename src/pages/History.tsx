@@ -93,6 +93,9 @@ const HistoryPage = () => {
           <StreakCard current={streak.current} longest={streak.longest} />
         </div>
 
+        {/* Calendário de atividade */}
+        <ActivityCalendar history={history} />
+
         {!stats ? (
           <div className="rounded-xl bg-card neon-border p-10 text-center text-sm text-muted-foreground">
             Você ainda não fez nenhum quiz. Jogue para começar a registrar sua evolução!
