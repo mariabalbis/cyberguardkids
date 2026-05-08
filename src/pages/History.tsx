@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2, Flame, Target, Pencil } from "lucide-react";
+import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2, Flame, Target, Pencil, ChevronDown } from "lucide-react";
 import {
   getHistory,
   clearHistory,
@@ -10,7 +10,20 @@ import {
   getWeeklyGoal,
   setWeeklyGoal,
 } from "@/lib/ranking";
-import { useState } from "react";
+
+type LevelFilter = "all" | RankingEntry["level"];
+const LEVEL_FILTERS: { value: LevelFilter; label: string }[] = [
+  { value: "all", label: "Todos" },
+  { value: "Iniciante", label: "Iniciante" },
+  { value: "Intermediário", label: "Intermediário" },
+  { value: "Avançado", label: "Avançado" },
+];
+const PERIOD_OPTIONS = [
+  { weeks: 8, label: "2 meses" },
+  { weeks: 14, label: "3 meses" },
+  { weeks: 26, label: "6 meses" },
+  { weeks: 52, label: "1 ano" },
+];
 
 const levelStyles: Record<RankingEntry["level"], { color: string; icon: typeof Trophy }> = {
   Avançado: { color: "text-accent", icon: Trophy },
