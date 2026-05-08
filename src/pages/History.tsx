@@ -403,7 +403,22 @@ const WEEKS_TO_SHOW = 14;
 const DAY_LABELS = ["S", "T", "Q", "Q", "S", "S", "D"];
 const MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-const ActivityCalendar = ({ history }: { history: RankingEntry[] }) => {
+const DetailItem = ({ label, value, valueClass = "" }: { label: string; value: string; valueClass?: string }) => (
+  <div>
+    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+    <p className={`text-xs font-semibold mt-0.5 ${valueClass || "text-foreground"}`}>{value}</p>
+  </div>
+);
+
+const ActivityCalendar = ({
+  history,
+  weeks: WEEKS_TO_SHOW,
+  onWeeksChange,
+}: {
+  history: RankingEntry[];
+  weeks: number;
+  onWeeksChange: (n: number) => void;
+}) => {
   const { weeks, monthMarkers, totalDays, maxCount } = useMemo(() => {
     const counts = new Map<number, number>();
     history.forEach((e) => {
