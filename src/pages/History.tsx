@@ -1,15 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2, Flame, Target, Pencil, ChevronDown } from "lucide-react";
+import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2, Flame, Target, Pencil, ChevronDown, Loader2, LogOut } from "lucide-react";
 import {
   getHistory,
   clearHistory,
   RankingEntry,
-  getWeeklyProgress,
-  getStreak,
+  computeWeeklyProgress,
+  computeStreak,
   getWeeklyGoal,
   setWeeklyGoal,
 } from "@/lib/ranking";
+import { useAuth } from "@/hooks/useAuth";
 
 type LevelFilter = "all" | RankingEntry["level"];
 const LEVEL_FILTERS: { value: LevelFilter; label: string }[] = [
