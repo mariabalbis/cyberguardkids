@@ -1,5 +1,6 @@
-import { Shield, Zap, Lock } from "lucide-react";
+import { Shield, Zap, Lock, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface WelcomeScreenProps {
   onStart: () => void;
