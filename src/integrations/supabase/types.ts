@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      quiz_history: {
+        Row: {
+          category: string
+          category_label: string
+          created_at: string
+          id: string
+          level: string
+          percentage: number
+          score: number
+          total: number
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          category_label?: string
+          created_at?: string
+          id?: string
+          level: string
+          percentage: number
+          score: number
+          total: number
+          user_id: string
+        }
+        Update: {
+          category?: string
+          category_label?: string
+          created_at?: string
+          id?: string
+          level?: string
+          percentage?: number
+          score?: number
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
