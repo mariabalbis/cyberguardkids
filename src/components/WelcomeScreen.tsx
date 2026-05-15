@@ -7,8 +7,21 @@ interface WelcomeScreenProps {
 }
 
 const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
+  const { user, signOut } = useAuth();
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12 bg-grid">
+      {/* Top bar */}
+      <div className="absolute top-4 right-4 flex items-center gap-3 z-20">
+        {user?.email && (
+          <span className="hidden sm:inline text-[11px] text-muted-foreground">{user.email}</span>
+        )}
+        <button
+          onClick={signOut}
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" /> Sair
+        </button>
+      </div>
       {/* Floating orbs */}
       <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-primary/5 blur-3xl" />
       <div className="absolute bottom-20 right-10 w-40 h-40 rounded-full bg-secondary/5 blur-3xl" />
