@@ -1,11 +1,35 @@
+import { useEffect, useState } from "react";
 import { getRanking, RankingEntry } from "@/lib/ranking";
-import { Trophy, Medal, Award } from "lucide-react";
+import { Trophy, Medal, Award, Loader2 } from "lucide-react";
 
 const positionIcons = [Trophy, Medal, Award];
 const positionColors = ["text-yellow-400", "text-zinc-400", "text-amber-600"];
 
-const Ranking = () => {
-  const ranking = getRanking();
+const Ranking = ({ refreshKey }: { refreshKey?: number }) => {
+  const [ranking, setRanking] = useState<RankingEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    getRanking().then((r) => {
+      if (mounted) {
+        setRanking(r);
+        setLoading(false);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [refreshKey]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-6">
+        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (ranking.length === 0) {
     return (
@@ -21,7 +45,7 @@ const Ranking = () => {
         🏆 Melhores Pontuações
       </h3>
       <div className="space-y-2">
-        {ranking.map((entry: RankingEntry, i: number) => {
+        {ranking.map((entry, i) => {
           const Icon = positionIcons[i] || null;
           const color = positionColors[i] || "text-muted-foreground";
 
