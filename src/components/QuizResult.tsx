@@ -68,8 +68,8 @@ const QuizResult = ({ score, total, onRestart, category, categoryLabel }: QuizRe
 
   useEffect(() => {
     if (!saved) {
-      addToRanking(score, total, { category, categoryLabel });
       setSaved(true);
+      addToRanking(score, total, { category, categoryLabel });
     }
   }, [score, total, saved, category, categoryLabel]);
 
