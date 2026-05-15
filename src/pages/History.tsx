@@ -33,21 +33,38 @@ const levelStyles: Record<RankingEntry["level"], { color: string; icon: typeof T
 };
 
 const HistoryPage = () => {
+  const { signOut, user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<RankingEntry[]>([]);
   const [version, setVersion] = useState(0);
   const [levelFilter, setLevelFilter] = useState<LevelFilter>("all");
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [calendarWeeks, setCalendarWeeks] = useState<number>(14);
-  const history = useMemo(() => getHistory(), [version]);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    getHistory().then((h) => {
+      if (mounted) {
+        setHistory(h);
+        setLoading(false);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [version]);
+
   const filteredHistory = useMemo(
     () => (levelFilter === "all" ? history : history.filter((e) => e.level === levelFilter)),
     [history, levelFilter]
   );
-  const weekly = useMemo(() => getWeeklyProgress(), [version]);
-  const streak = useMemo(() => getStreak(), [version]);
+  const weekly = useMemo(() => computeWeeklyProgress(history), [history]);
+  const streak = useMemo(() => computeStreak(history), [history]);
 
   const stats = useMemo(() => {
     if (history.length === 0) return null;
-    const ordered = [...history].reverse(); // chronological
+    const ordered = [...history].reverse();
     const avg = Math.round(
       ordered.reduce((sum, e) => sum + e.percentage, 0) / ordered.length
     );
@@ -58,9 +75,9 @@ const HistoryPage = () => {
     return { avg, best, total: ordered.length, evolution, ordered };
   }, [history]);
 
-  const handleClear = () => {
+  const handleClear = async () => {
     if (confirm("Tem certeza que deseja apagar todo o histórico?")) {
-      clearHistory();
+      await clearHistory();
       setVersion((v) => v + 1);
     }
   };
