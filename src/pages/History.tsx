@@ -99,22 +99,39 @@ const HistoryPage = () => {
       <div className="absolute bottom-20 left-10 w-32 h-32 rounded-full bg-secondary/5 blur-3xl" />
 
       <div className="relative z-10 max-w-3xl mx-auto space-y-8 animate-fade-up">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Voltar
           </Link>
-          {history.length > 0 && (
+          <div className="flex items-center gap-3">
+            {user?.email && (
+              <span className="hidden sm:inline text-[11px] text-muted-foreground">{user.email}</span>
+            )}
+            {history.length > 0 && (
+              <button
+                onClick={handleClear}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Limpar
+              </button>
+            )}
             <button
-              onClick={handleClear}
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              onClick={signOut}
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Trash2 className="w-3.5 h-3.5" /> Limpar histórico
+              <LogOut className="w-3.5 h-3.5" /> Sair
             </button>
-          )}
+          </div>
         </div>
+
+        {loading && (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          </div>
+        )}
 
         <header className="text-center space-y-2">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-glow">
