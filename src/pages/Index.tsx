@@ -35,13 +35,21 @@ const Index = () => {
     }
   }, [selectedCategory]);
 
-  const questions = useMemo(
-    () =>
+  const questions = useMemo(() => {
+    const pool =
       selectedCategory === "all"
         ? allQuestions
-        : allQuestions.filter((q) => q.category === selectedCategory),
-    [selectedCategory]
-  );
+        : allQuestions.filter((q) => q.category === selectedCategory);
+    // Shuffle question order each time a quiz is started
+    const shuffled = [...pool];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+    // Re-shuffle when category changes or when restarting (phase becomes "quiz")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, phase]);
 
   const categoryLabel =
     selectedCategory === "all"
