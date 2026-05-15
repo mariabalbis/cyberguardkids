@@ -30,13 +30,19 @@ const QuizQuestion = ({ question, questionNumber, onAnswer }: QuizQuestionProps)
   const [selected, setSelected] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
+  // Shuffle option order each time a question is mounted, remapping correctIndex
+  const { options: shuffledOptions, correctIndex: shuffledCorrectIndex } = useMemo(
+    () => shuffleOptions(question.options, question.correctIndex),
+    [question.id]
+  );
+
   const handleSelect = (index: number) => {
     if (showFeedback) return;
     setSelected(index);
     setShowFeedback(true);
   };
 
-  const isCorrect = selected === question.correctIndex;
+  const isCorrect = selected === shuffledCorrectIndex;
 
   const handleNext = () => {
     onAnswer(isCorrect);
