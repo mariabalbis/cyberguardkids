@@ -1,6 +1,18 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Question } from "@/data/questions";
 import { CheckCircle2, XCircle, ChevronRight } from "lucide-react";
+
+const shuffleOptions = (options: string[], correctIndex: number) => {
+  const indexed = options.map((opt, i) => ({ opt, i }));
+  for (let i = indexed.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+  }
+  return {
+    options: indexed.map((x) => x.opt),
+    correctIndex: indexed.findIndex((x) => x.i === correctIndex),
+  };
+};
 
 interface QuizQuestionProps {
   question: Question;
