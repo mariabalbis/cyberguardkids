@@ -69,11 +69,11 @@ const QuizQuestion = ({ question, questionNumber, onAnswer }: QuizQuestionProps)
 
       {/* Options */}
       <div className="space-y-3">
-        {question.options.map((option, index) => {
+        {shuffledOptions.map((option, index) => {
           let optionClass = "rounded-xl neon-border bg-card p-4 cursor-pointer transition-all duration-200 text-left w-full flex items-start gap-3";
 
           if (showFeedback) {
-            if (index === question.correctIndex) {
+            if (index === shuffledCorrectIndex) {
               optionClass += " card-glow-success border-success/40";
             } else if (index === selected) {
               optionClass += " card-glow-error border-destructive/40 animate-shake";
