@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { achievements, Achievement } from "@/data/questions";
-import { addToRanking, RankingEntry } from "@/lib/ranking";
+import { addToRanking } from "@/lib/ranking";
 import Ranking from "@/components/Ranking";
 import { RotateCcw, Trophy, Shield, Star, History } from "lucide-react";
 
@@ -68,8 +68,8 @@ const QuizResult = ({ score, total, onRestart, category, categoryLabel }: QuizRe
 
   useEffect(() => {
     if (!saved) {
-      addToRanking(score, total, { category, categoryLabel });
       setSaved(true);
+      addToRanking(score, total, { category, categoryLabel });
     }
   }, [score, total, saved, category, categoryLabel]);
 

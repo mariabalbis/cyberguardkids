@@ -1,15 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2, Flame, Target, Pencil, ChevronDown } from "lucide-react";
+import { ArrowLeft, Trophy, Shield, Star, TrendingUp, TrendingDown, Minus, Trash2, Flame, Target, Pencil, ChevronDown, Loader2, LogOut } from "lucide-react";
 import {
   getHistory,
   clearHistory,
   RankingEntry,
-  getWeeklyProgress,
-  getStreak,
+  computeWeeklyProgress,
+  computeStreak,
   getWeeklyGoal,
   setWeeklyGoal,
 } from "@/lib/ranking";
+import { useAuth } from "@/hooks/useAuth";
 
 type LevelFilter = "all" | RankingEntry["level"];
 const LEVEL_FILTERS: { value: LevelFilter; label: string }[] = [
@@ -32,21 +33,38 @@ const levelStyles: Record<RankingEntry["level"], { color: string; icon: typeof T
 };
 
 const HistoryPage = () => {
+  const { signOut, user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<RankingEntry[]>([]);
   const [version, setVersion] = useState(0);
   const [levelFilter, setLevelFilter] = useState<LevelFilter>("all");
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [calendarWeeks, setCalendarWeeks] = useState<number>(14);
-  const history = useMemo(() => getHistory(), [version]);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    getHistory().then((h) => {
+      if (mounted) {
+        setHistory(h);
+        setLoading(false);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [version]);
+
   const filteredHistory = useMemo(
     () => (levelFilter === "all" ? history : history.filter((e) => e.level === levelFilter)),
     [history, levelFilter]
   );
-  const weekly = useMemo(() => getWeeklyProgress(), [version]);
-  const streak = useMemo(() => getStreak(), [version]);
+  const weekly = useMemo(() => computeWeeklyProgress(history), [history]);
+  const streak = useMemo(() => computeStreak(history), [history]);
 
   const stats = useMemo(() => {
     if (history.length === 0) return null;
-    const ordered = [...history].reverse(); // chronological
+    const ordered = [...history].reverse();
     const avg = Math.round(
       ordered.reduce((sum, e) => sum + e.percentage, 0) / ordered.length
     );
@@ -57,9 +75,9 @@ const HistoryPage = () => {
     return { avg, best, total: ordered.length, evolution, ordered };
   }, [history]);
 
-  const handleClear = () => {
+  const handleClear = async () => {
     if (confirm("Tem certeza que deseja apagar todo o histórico?")) {
-      clearHistory();
+      await clearHistory();
       setVersion((v) => v + 1);
     }
   };
@@ -81,22 +99,39 @@ const HistoryPage = () => {
       <div className="absolute bottom-20 left-10 w-32 h-32 rounded-full bg-secondary/5 blur-3xl" />
 
       <div className="relative z-10 max-w-3xl mx-auto space-y-8 animate-fade-up">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Voltar
           </Link>
-          {history.length > 0 && (
+          <div className="flex items-center gap-3">
+            {user?.email && (
+              <span className="hidden sm:inline text-[11px] text-muted-foreground">{user.email}</span>
+            )}
+            {history.length > 0 && (
+              <button
+                onClick={handleClear}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Limpar
+              </button>
+            )}
             <button
-              onClick={handleClear}
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              onClick={signOut}
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Trash2 className="w-3.5 h-3.5" /> Limpar histórico
+              <LogOut className="w-3.5 h-3.5" /> Sair
             </button>
-          )}
+          </div>
         </div>
+
+        {loading && (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          </div>
+        )}
 
         <header className="text-center space-y-2">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-glow">

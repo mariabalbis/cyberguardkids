@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export interface RankingEntry {
   score: number;
   total: number;
@@ -9,19 +11,15 @@ export interface RankingEntry {
   level: "Iniciante" | "Intermediário" | "Avançado";
 }
 
-const RANKING_KEY = "cyberquiz-ranking";
-const HISTORY_KEY = "cyberquiz-history";
 const WEEKLY_GOAL_KEY = "cyberquiz-weekly-goal";
 const MAX_RANKING = 10;
-const MAX_HISTORY = 50;
 export const DEFAULT_WEEKLY_GOAL = 3;
 
-// Returns the Monday 00:00 timestamp of the week containing `date`.
 const getWeekStart = (date: Date): number => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
-  const day = d.getDay(); // 0 (Sun) - 6 (Sat)
-  const diff = (day + 6) % 7; // days since Monday
+  const day = d.getDay();
+  const diff = (day + 6) % 7;
   d.setDate(d.getDate() - diff);
   return d.getTime();
 };
@@ -33,6 +31,12 @@ const startOfDay = (ts: number): number => {
 };
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
+
+const getLevelFromPercentage = (percentage: number): RankingEntry["level"] => {
+  if (percentage >= 80) return "Avançado";
+  if (percentage >= 50) return "Intermediário";
+  return "Iniciante";
+};
 
 export function getWeeklyGoal(): number {
   try {
@@ -52,23 +56,80 @@ export function setWeeklyGoal(goal: number) {
   }
 }
 
-export function getWeeklyProgress(): { count: number; goal: number; weekStart: number } {
+const rowToEntry = (row: any): RankingEntry => {
+  const ts = new Date(row.created_at).getTime();
+  return {
+    score: row.score,
+    total: row.total,
+    percentage: row.percentage,
+    date: new Date(ts).toLocaleDateString("pt-BR"),
+    timestamp: ts,
+    category: row.category,
+    categoryLabel: row.category_label,
+    level: row.level as RankingEntry["level"],
+  };
+};
+
+export async function getHistory(): Promise<RankingEntry[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from("quiz_history")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) {
+    console.error("getHistory error:", error);
+    return [];
+  }
+  return (data ?? []).map(rowToEntry);
+}
+
+export async function getRanking(): Promise<RankingEntry[]> {
+  const history = await getHistory();
+  return [...history]
+    .sort((a, b) => b.percentage - a.percentage || b.score - a.score)
+    .slice(0, MAX_RANKING);
+}
+
+export async function clearHistory(): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase.from("quiz_history").delete().eq("user_id", user.id);
+  if (error) console.error("clearHistory error:", error);
+}
+
+export async function addToRanking(
+  score: number,
+  total: number,
+  meta?: { category?: string; categoryLabel?: string }
+): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+  const { error } = await supabase.from("quiz_history").insert({
+    user_id: user.id,
+    score,
+    total,
+    percentage,
+    category: meta?.category ?? "all",
+    category_label: meta?.categoryLabel ?? "Todas as categorias",
+    level: getLevelFromPercentage(percentage),
+  });
+  if (error) console.error("addToRanking error:", error);
+}
+
+// Sync helpers that derive from a provided history list (already loaded)
+export function computeWeeklyProgress(history: RankingEntry[]): { count: number; goal: number; weekStart: number } {
   const goal = getWeeklyGoal();
   const weekStart = getWeekStart(new Date());
-  const history = readList(HISTORY_KEY);
   const count = history.filter((e) => (e.timestamp ?? 0) >= weekStart).length;
   return { count, goal, weekStart };
 }
 
-export function getStreak(): { current: number; longest: number } {
-  const history = readList(HISTORY_KEY);
+export function computeStreak(history: RankingEntry[]): { current: number; longest: number } {
   if (history.length === 0) return { current: 0, longest: 0 };
-
-  // unique days that have at least one attempt
-  const days = Array.from(
-    new Set(history.map((e) => startOfDay(e.timestamp ?? 0)))
-  ).sort((a, b) => a - b);
-
+  const days = Array.from(new Set(history.map((e) => startOfDay(e.timestamp ?? 0)))).sort((a, b) => a - b);
   let longest = 1;
   let run = 1;
   for (let i = 1; i < days.length; i++) {
@@ -79,85 +140,14 @@ export function getStreak(): { current: number; longest: number } {
       run = 1;
     }
   }
-
-  // current streak: counting back from today (or yesterday if no quiz today)
   const today = startOfDay(Date.now());
   const daySet = new Set(days);
   let current = 0;
   let cursor = today;
-  if (!daySet.has(cursor)) cursor -= ONE_DAY; // allow yesterday-based streak
+  if (!daySet.has(cursor)) cursor -= ONE_DAY;
   while (daySet.has(cursor)) {
     current++;
     cursor -= ONE_DAY;
   }
-
   return { current, longest };
-}
-
-const getLevelFromPercentage = (percentage: number): RankingEntry["level"] => {
-  if (percentage >= 80) return "Avançado";
-  if (percentage >= 50) return "Intermediário";
-  return "Iniciante";
-};
-
-const readList = (key: string): RankingEntry[] => {
-  try {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-};
-
-export function getRanking(): RankingEntry[] {
-  return readList(RANKING_KEY);
-}
-
-export function getHistory(): RankingEntry[] {
-  const list = readList(HISTORY_KEY);
-  // newest first
-  return [...list].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
-}
-
-export function clearHistory() {
-  try {
-    localStorage.removeItem(HISTORY_KEY);
-    localStorage.removeItem(RANKING_KEY);
-  } catch {
-    // ignore
-  }
-}
-
-export function addToRanking(
-  score: number,
-  total: number,
-  meta?: { category?: string; categoryLabel?: string }
-): RankingEntry[] {
-  const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
-  const now = new Date();
-  const entry: RankingEntry = {
-    score,
-    total,
-    percentage,
-    date: now.toLocaleDateString("pt-BR"),
-    timestamp: now.getTime(),
-    category: meta?.category ?? "all",
-    categoryLabel: meta?.categoryLabel ?? "Todas as categorias",
-    level: getLevelFromPercentage(percentage),
-  };
-
-  // Top ranking (best scores)
-  const ranking = readList(RANKING_KEY);
-  ranking.push(entry);
-  ranking.sort((a, b) => b.percentage - a.percentage || b.score - a.score);
-  const trimmedRanking = ranking.slice(0, MAX_RANKING);
-  localStorage.setItem(RANKING_KEY, JSON.stringify(trimmedRanking));
-
-  // Full history
-  const history = readList(HISTORY_KEY);
-  history.push(entry);
-  const trimmedHistory = history.slice(-MAX_HISTORY);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmedHistory));
-
-  return trimmedRanking;
 }

@@ -1,6 +1,18 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Question } from "@/data/questions";
 import { CheckCircle2, XCircle, ChevronRight } from "lucide-react";
+
+const shuffleOptions = (options: string[], correctIndex: number) => {
+  const indexed = options.map((opt, i) => ({ opt, i }));
+  for (let i = indexed.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+  }
+  return {
+    options: indexed.map((x) => x.opt),
+    correctIndex: indexed.findIndex((x) => x.i === correctIndex),
+  };
+};
 
 interface QuizQuestionProps {
   question: Question;
@@ -18,13 +30,19 @@ const QuizQuestion = ({ question, questionNumber, onAnswer }: QuizQuestionProps)
   const [selected, setSelected] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
+  // Shuffle option order each time a question is mounted, remapping correctIndex
+  const { options: shuffledOptions, correctIndex: shuffledCorrectIndex } = useMemo(
+    () => shuffleOptions(question.options, question.correctIndex),
+    [question.id]
+  );
+
   const handleSelect = (index: number) => {
     if (showFeedback) return;
     setSelected(index);
     setShowFeedback(true);
   };
 
-  const isCorrect = selected === question.correctIndex;
+  const isCorrect = selected === shuffledCorrectIndex;
 
   const handleNext = () => {
     onAnswer(isCorrect);
@@ -51,11 +69,11 @@ const QuizQuestion = ({ question, questionNumber, onAnswer }: QuizQuestionProps)
 
       {/* Options */}
       <div className="space-y-3">
-        {question.options.map((option, index) => {
+        {shuffledOptions.map((option, index) => {
           let optionClass = "rounded-xl neon-border bg-card p-4 cursor-pointer transition-all duration-200 text-left w-full flex items-start gap-3";
 
           if (showFeedback) {
-            if (index === question.correctIndex) {
+            if (index === shuffledCorrectIndex) {
               optionClass += " card-glow-success border-success/40";
             } else if (index === selected) {
               optionClass += " card-glow-error border-destructive/40 animate-shake";
