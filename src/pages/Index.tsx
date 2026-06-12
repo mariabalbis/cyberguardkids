@@ -1,15 +1,19 @@
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import CategorySelect from "@/components/CategorySelect";
+import LevelSelect from "@/components/LevelSelect";
 import QuizQuestion from "@/components/QuizQuestion";
 import QuizProgress from "@/components/QuizProgress";
 import QuizResult from "@/components/QuizResult";
+import RobotMascot, { MascotMood } from "@/components/RobotMascot";
 import { questions as allQuestions, Category, categories } from "@/data/questions";
+import { getQuestionsForLevel, QUESTIONS_PER_LEVEL } from "@/lib/levels";
 import { Shield } from "lucide-react";
 
-type Phase = "welcome" | "category" | "quiz" | "result";
+type Phase = "welcome" | "category" | "level" | "quiz" | "result";
 
 const LAST_CATEGORY_KEY = "cyberquiz:last-category";
+const TUTORIAL_SEEN_KEY = "cyberquiz:tutorial-seen";
 
 const isValidCategory = (value: string | null): value is Category | "all" => {
   if (!value) return false;
@@ -17,15 +21,34 @@ const isValidCategory = (value: string | null): value is Category | "all" => {
   return categories.some((c) => c.id === value);
 };
 
+const TUTORIAL_MESSAGE =
+  "Olá! Sou o CyberBot 🤖. Escolha um tema, depois um nível (10 perguntas). Você pode jogar até 2 níveis por dia para manter sua sequência. Se errar, leio a explicação para você — e estou sempre aqui no canto se precisar!";
+
+const TIP_BY_CATEGORY: Record<Category | "all", string> = {
+  senhas: "Dica: senhas fortes são longas, misturam letras, números e símbolos. Nunca compartilhe — nem com amigos.",
+  golpes: "Dica: desconfie de urgência, prêmios fáceis e links estranhos. Quando em dúvida, não clique.",
+  privacidade: "Dica: pense antes de postar. Dados pessoais (CPF, endereço, localização) são valiosos para golpistas.",
+  "redes-sociais": "Dica: revise quem te segue, bloqueie desconhecidos insistentes e jamais combine encontros sozinho.",
+  dispositivos: "Dica: mantenha apps atualizados, use Wi-Fi confiável e evite instalar apps fora das lojas oficiais.",
+  all: "Dica: leia com calma e elimine as alternativas claramente erradas antes de responder.",
+};
+
 const Index = () => {
   const [phase, setPhase] = useState<Phase>("welcome");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
+  const [levelIndex, setLevelIndex] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | "all">(() => {
     if (typeof window === "undefined") return "all";
     const stored = window.localStorage.getItem(LAST_CATEGORY_KEY);
     return isValidCategory(stored) ? stored : "all";
   });
+
+  // Mascot state
+  const [mascotMood, setMascotMood] = useState<MascotMood>("idle");
+  const [mascotMessage, setMascotMessage] = useState<string | undefined>();
+  const wrongStreak = useRef(0);
+  const rightStreak = useRef(0);
 
   useEffect(() => {
     try {
@@ -35,28 +58,47 @@ const Index = () => {
     }
   }, [selectedCategory]);
 
+  // Show tutorial on first welcome render
+  useEffect(() => {
+    if (phase !== "welcome") return;
+    try {
+      if (!window.localStorage.getItem(TUTORIAL_SEEN_KEY)) {
+        setMascotMood("tutorial");
+        setMascotMessage(TUTORIAL_MESSAGE);
+        window.localStorage.setItem(TUTORIAL_SEEN_KEY, "1");
+      }
+    } catch {
+      // ignore
+    }
+  }, [phase]);
+
   const questions = useMemo(() => {
-    const pool =
-      selectedCategory === "all"
-        ? allQuestions
-        : allQuestions.filter((q) => q.category === selectedCategory);
-    // Shuffle question order each time a quiz is started
+    let pool;
+    if (selectedCategory === "all") {
+      pool = [...allQuestions];
+    } else if (levelIndex) {
+      pool = getQuestionsForLevel(selectedCategory, levelIndex);
+    } else {
+      pool = allQuestions.filter((q) => q.category === selectedCategory);
+    }
     const shuffled = [...pool];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    return shuffled;
-    // Re-shuffle when category changes or when restarting (phase becomes "quiz")
+    // For "all", cap at QUESTIONS_PER_LEVEL for a quick free-play round
+    return selectedCategory === "all" ? shuffled.slice(0, QUESTIONS_PER_LEVEL) : shuffled;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, phase]);
+  }, [selectedCategory, levelIndex, phase]);
 
   const categoryLabel =
     selectedCategory === "all"
-      ? "Todas as categorias"
+      ? "Treino livre"
       : categories.find((c) => c.id === selectedCategory)?.label ?? "";
 
   const handleStart = useCallback(() => {
+    setMascotMessage(undefined);
+    setMascotMood("idle");
     setPhase("category");
   }, []);
 
@@ -64,39 +106,113 @@ const Index = () => {
     setSelectedCategory(cat);
     setCurrentQuestion(0);
     setScore(0);
-    setPhase("quiz");
+    if (cat === "all") {
+      setLevelIndex(null);
+      setPhase("quiz");
+    } else {
+      setPhase("level");
+    }
   }, []);
 
-  const handleAnswer = useCallback((correct: boolean) => {
-    if (correct) setScore((s) => s + 10);
+  const handleSelectLevel = useCallback((idx: number) => {
+    setLevelIndex(idx);
+    setCurrentQuestion(0);
+    setScore(0);
+    setPhase("quiz");
+    setMascotMood("idle");
+    setMascotMessage(`Nível ${idx} iniciado! Boa sorte 🚀`);
+    wrongStreak.current = 0;
+    rightStreak.current = 0;
+  }, []);
 
-    if (currentQuestion + 1 >= questions.length) {
-      setTimeout(() => setPhase("result"), 300);
-    } else {
-      setCurrentQuestion((c) => c + 1);
-    }
-  }, [currentQuestion, questions.length]);
+  const handleAnswer = useCallback(
+    (correct: boolean) => {
+      if (correct) {
+        setScore((s) => s + 10);
+        rightStreak.current += 1;
+        wrongStreak.current = 0;
+        if (rightStreak.current >= 3) {
+          setMascotMood("celebrate");
+          setMascotMessage(`Sequência de ${rightStreak.current} acertos! Você está voando 🎉`);
+          rightStreak.current = 0;
+        }
+      } else {
+        wrongStreak.current += 1;
+        rightStreak.current = 0;
+        if (wrongStreak.current >= 2) {
+          setMascotMood("tip");
+          setMascotMessage(TIP_BY_CATEGORY[selectedCategory]);
+          wrongStreak.current = 0;
+        }
+      }
+
+      if (currentQuestion + 1 >= questions.length) {
+        setTimeout(() => setPhase("result"), 300);
+      } else {
+        setCurrentQuestion((c) => c + 1);
+      }
+    },
+    [currentQuestion, questions.length, selectedCategory]
+  );
 
   const handleRestart = useCallback(() => {
     setPhase("welcome");
     setCurrentQuestion(0);
     setScore(0);
+    setLevelIndex(null);
+    setMascotMessage(undefined);
+    setMascotMood("idle");
   }, []);
 
-  if (phase === "welcome") return <WelcomeScreen onStart={handleStart} />;
+  const mascot = (
+    <RobotMascot
+      mood={mascotMood}
+      message={mascotMessage}
+      onDismiss={() => setMascotMessage(undefined)}
+    />
+  );
+
+  if (phase === "welcome")
+    return (
+      <>
+        <WelcomeScreen onStart={handleStart} />
+        {mascot}
+      </>
+    );
 
   if (phase === "category")
-    return <CategorySelect onSelect={handleSelectCategory} onBack={handleRestart} selected={selectedCategory} />;
+    return (
+      <>
+        <CategorySelect onSelect={handleSelectCategory} onBack={handleRestart} selected={selectedCategory} />
+        {mascot}
+      </>
+    );
+
+  if (phase === "level" && selectedCategory !== "all")
+    return (
+      <>
+        <LevelSelect
+          category={selectedCategory}
+          onSelect={handleSelectLevel}
+          onBack={() => setPhase("category")}
+        />
+        {mascot}
+      </>
+    );
 
   if (phase === "result") {
     return (
-      <QuizResult
-        score={score}
-        total={questions.length * 10}
-        onRestart={handleRestart}
-        category={selectedCategory}
-        categoryLabel={categoryLabel}
-      />
+      <>
+        <QuizResult
+          score={score}
+          total={questions.length * 10}
+          onRestart={handleRestart}
+          category={selectedCategory}
+          categoryLabel={categoryLabel}
+          levelIndex={levelIndex}
+        />
+        {mascot}
+      </>
     );
   }
 
@@ -109,6 +225,7 @@ const Index = () => {
           <span className="font-semibold text-sm">CyberQuiz</span>
           <span className="hidden sm:inline text-xs text-muted-foreground ml-2">
             · {categoryLabel}
+            {levelIndex && ` · Nível ${levelIndex}`}
           </span>
         </div>
         <button
@@ -132,6 +249,8 @@ const Index = () => {
           onAnswer={handleAnswer}
         />
       </div>
+
+      {mascot}
     </div>
   );
 };
