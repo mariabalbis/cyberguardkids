@@ -9,6 +9,7 @@ export interface RankingEntry {
   category: string;
   categoryLabel: string;
   level: "Iniciante" | "Intermediário" | "Avançado";
+  levelIndex?: number | null;
 }
 
 const WEEKLY_GOAL_KEY = "cyberquiz-weekly-goal";
@@ -67,6 +68,7 @@ const rowToEntry = (row: any): RankingEntry => {
     category: row.category,
     categoryLabel: row.category_label,
     level: row.level as RankingEntry["level"],
+    levelIndex: row.level_index ?? null,
   };
 };
 
@@ -102,7 +104,7 @@ export async function clearHistory(): Promise<void> {
 export async function addToRanking(
   score: number,
   total: number,
-  meta?: { category?: string; categoryLabel?: string }
+  meta?: { category?: string; categoryLabel?: string; levelIndex?: number | null }
 ): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
@@ -115,6 +117,7 @@ export async function addToRanking(
     category: meta?.category ?? "all",
     category_label: meta?.categoryLabel ?? "Todas as categorias",
     level: getLevelFromPercentage(percentage),
+    level_index: meta?.levelIndex ?? null,
   });
   if (error) console.error("addToRanking error:", error);
 }
