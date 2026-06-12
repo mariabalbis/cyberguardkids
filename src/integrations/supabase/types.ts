@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           id: string
           level: string
+          level_index: number | null
           percentage: number
           score: number
           total: number
@@ -32,6 +33,7 @@ export type Database = {
           created_at?: string
           id?: string
           level: string
+          level_index?: number | null
           percentage: number
           score: number
           total: number
@@ -43,6 +45,7 @@ export type Database = {
           created_at?: string
           id?: string
           level?: string
+          level_index?: number | null
           percentage?: number
           score?: number
           total?: number
