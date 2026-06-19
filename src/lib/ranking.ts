@@ -105,12 +105,12 @@ export async function addToRanking(
 }
 
 // Sync helpers that derive from a provided history list (already loaded)
-export function computeWeeklyProgress(history: RankingEntry[]): { count: number; goal: number; weekStart: number } {
-  const goal = getWeeklyGoal();
+export function computeWeeklyProgress(history: RankingEntry[], goal: number = DEFAULT_WEEKLY_GOAL): { count: number; goal: number; weekStart: number } {
   const weekStart = getWeekStart(new Date());
   const count = history.filter((e) => (e.timestamp ?? 0) >= weekStart).length;
   return { count, goal, weekStart };
 }
+
 
 export function computeStreak(history: RankingEntry[]): { current: number; longest: number } {
   if (history.length === 0) return { current: 0, longest: 0 };
