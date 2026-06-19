@@ -7,10 +7,10 @@ import {
   RankingEntry,
   computeWeeklyProgress,
   computeStreak,
-  getWeeklyGoal,
-  setWeeklyGoal,
 } from "@/lib/ranking";
+import { getPreferences, setWeeklyGoalPref, DEFAULT_PREFERENCES } from "@/lib/preferences";
 import { useAuth } from "@/hooks/useAuth";
+
 
 type LevelFilter = "all" | RankingEntry["level"];
 const LEVEL_FILTERS: { value: LevelFilter; label: string }[] = [
