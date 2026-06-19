@@ -8,14 +8,12 @@ import QuizResult from "@/components/QuizResult";
 import RobotMascot, { MascotMood } from "@/components/RobotMascot";
 import { questions as allQuestions, Category, categories } from "@/data/questions";
 import { getQuestionsForLevel, QUESTIONS_PER_LEVEL } from "@/lib/levels";
+import { getPreferences, setLastCategoryPref, setTutorialSeenPref } from "@/lib/preferences";
 import { Shield } from "lucide-react";
 
 type Phase = "welcome" | "category" | "level" | "quiz" | "result";
 
-const LAST_CATEGORY_KEY = "cyberquiz:last-category";
-const TUTORIAL_SEEN_KEY = "cyberquiz:tutorial-seen";
-
-const isValidCategory = (value: string | null): value is Category | "all" => {
+const isValidCategory = (value: string | null | undefined): value is Category | "all" => {
   if (!value) return false;
   if (value === "all") return true;
   return categories.some((c) => c.id === value);
@@ -38,11 +36,8 @@ const Index = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [levelIndex, setLevelIndex] = useState<number | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<Category | "all">(() => {
-    if (typeof window === "undefined") return "all";
-    const stored = window.localStorage.getItem(LAST_CATEGORY_KEY);
-    return isValidCategory(stored) ? stored : "all";
-  });
+  const [selectedCategory, setSelectedCategory] = useState<Category | "all">("all");
+  const prefsLoaded = useRef(false);
 
   // Mascot state
   const [mascotMood, setMascotMood] = useState<MascotMood>("idle");
@@ -50,27 +45,32 @@ const Index = () => {
   const wrongStreak = useRef(0);
   const rightStreak = useRef(0);
 
+  // Load preferences from backend on mount
   useEffect(() => {
-    try {
-      window.localStorage.setItem(LAST_CATEGORY_KEY, selectedCategory);
-    } catch {
-      // ignore
-    }
-  }, [selectedCategory]);
-
-  // Show tutorial on first welcome render
-  useEffect(() => {
-    if (phase !== "welcome") return;
-    try {
-      if (!window.localStorage.getItem(TUTORIAL_SEEN_KEY)) {
+    let mounted = true;
+    getPreferences().then((prefs) => {
+      if (!mounted) return;
+      if (isValidCategory(prefs.lastCategory)) {
+        setSelectedCategory(prefs.lastCategory);
+      }
+      if (!prefs.tutorialSeen) {
         setMascotMood("tutorial");
         setMascotMessage(TUTORIAL_MESSAGE);
-        window.localStorage.setItem(TUTORIAL_SEEN_KEY, "1");
+        void setTutorialSeenPref(true);
       }
-    } catch {
-      // ignore
-    }
-  }, [phase]);
+      prefsLoaded.current = true;
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Persist last category to backend whenever it changes (after initial load)
+  useEffect(() => {
+    if (!prefsLoaded.current) return;
+    void setLastCategoryPref(selectedCategory);
+  }, [selectedCategory]);
+
 
   const questions = useMemo(() => {
     let pool;
