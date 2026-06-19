@@ -53,6 +53,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          created_at: string
+          last_category: string | null
+          tutorial_seen: boolean
+          updated_at: string
+          user_id: string
+          weekly_goal: number
+        }
+        Insert: {
+          created_at?: string
+          last_category?: string | null
+          tutorial_seen?: boolean
+          updated_at?: string
+          user_id: string
+          weekly_goal?: number
+        }
+        Update: {
+          created_at?: string
+          last_category?: string | null
+          tutorial_seen?: boolean
+          updated_at?: string
+          user_id?: string
+          weekly_goal?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -7,10 +7,10 @@ import {
   RankingEntry,
   computeWeeklyProgress,
   computeStreak,
-  getWeeklyGoal,
-  setWeeklyGoal,
 } from "@/lib/ranking";
+import { getPreferences, setWeeklyGoalPref, DEFAULT_PREFERENCES } from "@/lib/preferences";
 import { useAuth } from "@/hooks/useAuth";
+
 
 type LevelFilter = "all" | RankingEntry["level"];
 const LEVEL_FILTERS: { value: LevelFilter; label: string }[] = [
@@ -40,13 +40,15 @@ const HistoryPage = () => {
   const [levelFilter, setLevelFilter] = useState<LevelFilter>("all");
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [calendarWeeks, setCalendarWeeks] = useState<number>(14);
+  const [weeklyGoal, setWeeklyGoalState] = useState<number>(DEFAULT_PREFERENCES.weeklyGoal);
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    getHistory().then((h) => {
+    Promise.all([getHistory(), getPreferences()]).then(([h, prefs]) => {
       if (mounted) {
         setHistory(h);
+        setWeeklyGoalState(prefs.weeklyGoal);
         setLoading(false);
       }
     });
@@ -59,7 +61,7 @@ const HistoryPage = () => {
     () => (levelFilter === "all" ? history : history.filter((e) => e.level === levelFilter)),
     [history, levelFilter]
   );
-  const weekly = useMemo(() => computeWeeklyProgress(history), [history]);
+  const weekly = useMemo(() => computeWeeklyProgress(history, weeklyGoal), [history, weeklyGoal]);
   const streak = useMemo(() => computeStreak(history), [history]);
 
   const stats = useMemo(() => {
@@ -82,16 +84,16 @@ const HistoryPage = () => {
     }
   };
 
-  const handleEditGoal = () => {
-    const current = getWeeklyGoal();
-    const input = prompt("Defina sua meta semanal de quizzes (1 a 50):", String(current));
+  const handleEditGoal = async () => {
+    const input = prompt("Defina sua meta semanal de quizzes (1 a 50):", String(weeklyGoal));
     if (input === null) return;
     const n = parseInt(input, 10);
     if (Number.isFinite(n) && n > 0) {
-      setWeeklyGoal(n);
+      await setWeeklyGoalPref(n);
       setVersion((v) => v + 1);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-grid px-6 py-10">

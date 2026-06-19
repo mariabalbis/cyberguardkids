@@ -12,7 +12,6 @@ export interface RankingEntry {
   levelIndex?: number | null;
 }
 
-const WEEKLY_GOAL_KEY = "cyberquiz-weekly-goal";
 const MAX_RANKING = 10;
 export const DEFAULT_WEEKLY_GOAL = 3;
 
@@ -39,23 +38,6 @@ const getLevelFromPercentage = (percentage: number): RankingEntry["level"] => {
   return "Iniciante";
 };
 
-export function getWeeklyGoal(): number {
-  try {
-    const v = localStorage.getItem(WEEKLY_GOAL_KEY);
-    const n = v ? parseInt(v, 10) : NaN;
-    return Number.isFinite(n) && n > 0 ? n : DEFAULT_WEEKLY_GOAL;
-  } catch {
-    return DEFAULT_WEEKLY_GOAL;
-  }
-}
-
-export function setWeeklyGoal(goal: number) {
-  try {
-    localStorage.setItem(WEEKLY_GOAL_KEY, String(Math.max(1, Math.min(50, Math.round(goal)))));
-  } catch {
-    // ignore
-  }
-}
 
 const rowToEntry = (row: any): RankingEntry => {
   const ts = new Date(row.created_at).getTime();
@@ -123,12 +105,12 @@ export async function addToRanking(
 }
 
 // Sync helpers that derive from a provided history list (already loaded)
-export function computeWeeklyProgress(history: RankingEntry[]): { count: number; goal: number; weekStart: number } {
-  const goal = getWeeklyGoal();
+export function computeWeeklyProgress(history: RankingEntry[], goal: number = DEFAULT_WEEKLY_GOAL): { count: number; goal: number; weekStart: number } {
   const weekStart = getWeekStart(new Date());
   const count = history.filter((e) => (e.timestamp ?? 0) >= weekStart).length;
   return { count, goal, weekStart };
 }
+
 
 export function computeStreak(history: RankingEntry[]): { current: number; longest: number } {
   if (history.length === 0) return { current: 0, longest: 0 };
