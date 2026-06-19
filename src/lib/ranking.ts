@@ -12,7 +12,6 @@ export interface RankingEntry {
   levelIndex?: number | null;
 }
 
-const WEEKLY_GOAL_KEY = "cyberquiz-weekly-goal";
 const MAX_RANKING = 10;
 export const DEFAULT_WEEKLY_GOAL = 3;
 
@@ -39,23 +38,6 @@ const getLevelFromPercentage = (percentage: number): RankingEntry["level"] => {
   return "Iniciante";
 };
 
-export function getWeeklyGoal(): number {
-  try {
-    const v = localStorage.getItem(WEEKLY_GOAL_KEY);
-    const n = v ? parseInt(v, 10) : NaN;
-    return Number.isFinite(n) && n > 0 ? n : DEFAULT_WEEKLY_GOAL;
-  } catch {
-    return DEFAULT_WEEKLY_GOAL;
-  }
-}
-
-export function setWeeklyGoal(goal: number) {
-  try {
-    localStorage.setItem(WEEKLY_GOAL_KEY, String(Math.max(1, Math.min(50, Math.round(goal)))));
-  } catch {
-    // ignore
-  }
-}
 
 const rowToEntry = (row: any): RankingEntry => {
   const ts = new Date(row.created_at).getTime();
